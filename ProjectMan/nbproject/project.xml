@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://www.netbeans.org/ns/project/1">
+    <type>org.netbeans.modules.php.project</type>
+    <configuration>
+        <data xmlns="http://www.netbeans.org/ns/php-project/1">
+            <name>ProjectMan</name>
+        </data>
+        <spellchecker-wordlist xmlns="http://www.netbeans.org/ns/spellchecker-wordlist/1">
+            <word>addLine</word>
+            <word>Fuctions</word>
+            <word>ProjectMan</word>
+            <word>Головна</word>
+            <word>ДіїЖ</word>
+            <word>Лабораторна</word>
+            <word>робота</word>
+            <word>робіт</word>
+            <word>Структурне</word>
+        </spellchecker-wordlist>
+    </configuration>
+</project>

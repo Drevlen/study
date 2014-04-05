@@ -1,0 +1,142 @@
+* {
+    margin: 0px; 
+    padding: 0px;
+}
+
+html, body {
+    height: 100%; 
+    width: 100%;
+    background-color: #ffffcc;
+}
+
+#wrapper {
+    min-height: 100%; 
+    width: 1024px; 
+    margin: 0px auto; 
+    position: relative;
+}
+
+#header {
+    width: 1024px;
+    height: 90px;
+    margin-left: auto;
+    margin-right: auto;
+    border-style: none;
+    background-image: url(bannerfans.jpg);
+    background-repeat: no-repeat;
+    background-position: center;
+}
+
+#content {
+    width: 1024px;
+    margin-left: auto;
+    margin-right: auto;
+    border-style: none;
+    color: darkblue;
+    padding: 5px;
+    padding-bottom: 20px;
+    padding-top: 50px;
+}
+
+a.content:link, a.content:visited {
+    display: block;
+    font-weight: bold;
+    font-size: 20px;
+    color: #0000FF;
+    background-color: #ffffcc;
+    text-align: center;
+    text-decoration: none;
+    padding: 5px;
+}
+
+a.content:hover, a.content:active{
+    background-color: #ffffcc;
+    text-decoration: underline;
+
+}
+
+#footer {
+width: 1024px;
+height: 20px;
+position: absolute;
+bottom: 0px;
+font-size: 14px;
+color: darkblue;
+text-align: center;
+}
+
+#nav {
+    list-style-type: none;
+    padding: 0px;
+    margin-left: auto;
+    margin-right: auto;
+    width: 728px;
+}
+
+.linav {
+    float: left;
+}
+
+a.nav:link, a.nav:visited {
+    display: block;
+//    width: 94px;
+    font-weight: bold;
+    font-size: 20px;
+    color: #FFF;
+    background-color: #4444ff;
+    text-align: center;
+    text-decoration: none;
+    padding: 5px;
+}
+
+a.nav:hover, a.nav:active{
+    background-color: #0000ff;
+    text-decoration: underline;
+
+}
+
+ul {
+    padding-left: 30px;
+}
+dt {
+    padding-left: 30px;    
+}
+
+dd {
+    padding-left: 50px;    
+}
+
+p {
+    padding-top: 10px;
+    padding-left: 10px;
+}
+
+#submitbutton {
+    padding: 50px;
+}
+
+#button {
+    font-weight: bold;
+    font-size: 15px;
+    color: #0000FF;
+    background-color:#ffffcc;
+    border-color: #0000FF;
+    border-width: 4px;
+    margin: 2px;
+}
+.button:hover {
+	background-color:#ffffcc;
+}
+.button:active {
+}
+
+#ProjectName{
+    width: 1024px;
+    margin-left: auto;
+    margin-right: auto;
+    border-style: none;
+    font-size: 24px;
+    font-weight: bold;
+    text-align: center;
+}
+
