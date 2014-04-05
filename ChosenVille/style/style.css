@@ -1,0 +1,103 @@
+* {
+    margin: 0px; 
+    padding: 0px;
+}
+
+html, body {
+    height: 100%; 
+    width: 100%;
+    background-color: #ffffcc;
+}
+
+#wrapper {
+    min-height: 100%; 
+    margin: 0px auto; 
+    position: relative;
+}
+
+
+#header {
+    height: 100px;
+    margin-left: auto;
+    margin-right: auto;
+    border-style: none;
+    background-image: url(../res/bannerfans.png);
+    background-repeat: repeat;
+    background-position: center;
+    text-align: center;
+}
+
+
+#nav {
+    list-style-type: none;
+    padding: 0px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+#nav ul {
+     margin: 0;
+     padding: 0;
+     list-style-type: none;
+     text-align: center;
+ }
+
+ #nav ul li  { 
+     display: inline; 
+ }
+
+ #nav ul li a {
+    text-decoration: none;
+    padding: .2em 1em;
+    color: #fff;
+    background-color: #0000ff;
+    font-weight: bold;
+    font-size: 20px;
+ }
+
+ #nav ul li a:hover {
+    color: #fff;
+    background-color: #4444ff;
+ }
+ 
+#content {
+    margin-left: auto;
+    margin-right: auto;
+    border-style: none;
+    color: darkblue;
+    padding: 5px;
+    padding-bottom: 20px;
+}
+
+
+#content p {
+    padding-top: 10px;
+    padding-left: 10px;
+}
+
+#content input, select, p:first-letter {
+    margin-left: 3em;
+    display: block;
+}
+
+#contentLeft {
+    float: left; 
+    width: 50%
+}
+
+#contentRight {
+    float: right; 
+    width: 50%
+}
+
+#footer {
+    position:absolute;
+    bottom: 0;
+    width: 100%;
+    font-size: 14px;
+    color: darkblue;
+}
+
+#footer p {
+    text-align: center;
+}
