@@ -1,0 +1,98 @@
+* {
+    margin: 0px; 
+    padding: 0px;
+}
+
+html, body {
+    height: 100%; 
+    width: 100%;
+    background-color: #ffffcc;
+}
+
+#wrapper {
+    min-height: 100%; 
+    width: 728px; 
+    margin: 0px auto; 
+    position: relative;
+}
+
+#header {
+    width: 728px;
+    height: 90px;
+    margin-left: auto;
+    margin-right: auto;
+    border-style: none;
+    background-image: url(bannerfans.jpg);
+    background-repeat: no-repeat;
+    background-position: center;
+}
+
+#content {
+    width: 728px;
+    margin-left: auto;
+    margin-right: auto;
+    border-style: none;
+    color: darkblue;
+    padding: 5px;
+    padding-bottom: 20px;
+}
+
+#footer {
+width: 728px;
+height: 20px;
+position: absolute;
+bottom: 0px;
+font-size: 14px;
+color: darkblue;
+text-align: center;
+}
+
+#nav {
+    list-style-type: none;
+    padding: 0px;
+    margin-left: auto;
+    margin-right: auto;
+    width: 728px;
+}
+.linav {
+    float: left;
+}
+
+a.nav:link, a.nav:visited {
+    display: block;
+    width: 94px;
+    font-weight: bold;
+    font-size: 20px;
+    color: #FFF;
+    background-color: #4444ff;
+    text-align: center;
+    text-decoration: none;
+    padding: 5px;
+}
+
+a.nav:hover, a.nav:active{
+    background-color: #0000ff;
+    text-decoration: underline;
+
+}
+
+ul {
+    padding-left: 30px;
+}
+dt {
+    padding-left: 30px;    
+}
+
+dd {
+    padding-left: 50px;    
+}
+
+p {
+    padding-top: 10px;
+}
+ul.test {
+    list-style-type:  none;
+}
+#submitbutton {
+    padding: 50px;
+}
