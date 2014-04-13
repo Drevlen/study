@@ -15,9 +15,15 @@ import java.util.ArrayList;
 public class QuestionSystem {
     public QuestionSystem() {
         qidOrder = new ArrayList();
+        questions = new ArrayList();
     }
     public int getSize() {
-        return qidOrder.size();
+        return questions.size();
     }
+    public void addQuestion(Question question) {
+        questions.add(question);
+        qidOrder.add(question.getQuestionId());
+    }
+    private List<Question> questions;
     private List<Integer> qidOrder;
 }

@@ -15,7 +15,7 @@ public class QuestionType3 extends Question {
         QuestionType3(String question, List<String> answers, List<Double> weights) {
         super.question = question;
         super.qid = 0; // TODO useDBConnection
-        super.typeNum = 2;
+        super.typeNum = 3;
         assert answers.size() == weights.size();
         super.possibleAnswers = answers;
         weight = weights;

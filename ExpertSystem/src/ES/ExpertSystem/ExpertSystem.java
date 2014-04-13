@@ -7,6 +7,7 @@
 package ES.ExpertSystem;
 import java.sql.SQLException;
 import java.util.List;
+import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -71,9 +72,35 @@ public class ExpertSystem {
         
         return "Додавання не реалізоване";
     }
-    
-    public void addQuestion(Question anyQuestion) {
-        
+
+    public String addQuestion(String question, int type, 
+            List<String> answers, List<String> weights) {
+        List<Double> doubleWeights = new ArrayList();
+        for (String weight : weights) {
+            doubleWeights.add(Double.parseDouble(weight));
+        }
+        Question anyQuestion;
+        switch(type){
+            case 0:
+                anyQuestion = new QuestionType1(question); break;
+            case 1:
+                anyQuestion = new QuestionType2(question, answers, 
+                        doubleWeights); break;
+            case 2:
+                anyQuestion = new QuestionType3(question, answers, 
+                        doubleWeights); break;
+            case 3:
+                anyQuestion = new QuestionType4(question); break;
+            case 4:
+                anyQuestion = new QuestionType5(question, answers); break;
+            case 5:
+                anyQuestion = new QuestionType1(question); break;
+            case 6:
+                anyQuestion = new QuestionType1(question); break;
+            default: return "Невідомий тип";
+        }
+        questionSystem.addQuestion(anyQuestion);
+        return "Додано питання";
     }
    
     private final DBConnection db;

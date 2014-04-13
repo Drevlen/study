@@ -10,25 +10,19 @@
 
 package ES.ExpertSystem;
 
-//import javax.swing.JLabel;
-//import javax.swing.JPanel;
-//import javax.swing.JTextField;
-//import javax.swing.JComponent;
-//import javax.swing.SpringLayout;
-//import javax.swing.JButton;
+import java.util.List;
+import java.util.ArrayList;
 import javax.swing.*;
 
-//import java.awt.Dimension;
-//import java.awt.event.ActionListener;
-//import java.awt.event.ActionEvent;
 import java.awt.*;
 import java.awt.event.*;
+import java.util.ArrayList;
 
 /**
  *
  * @author drevlen
  */
-public class ExpertSystemUI extends javax.swing.JFrame implements ActionListener {
+public class ExpertSystemUI extends javax.swing.JFrame implements ActionListener, MouseMotionListener {
 
     /**
      * Creates new form ExpertSystemUI
@@ -39,8 +33,22 @@ public class ExpertSystemUI extends javax.swing.JFrame implements ActionListener
     }
 
     @Override
+    public void mouseMoved(MouseEvent e) {
+        for (int i = boxAnswer.size() - 1; i >= 0; i--) {
+            if (boxAnswer.get(i).getText().isEmpty() &&
+                    boxAnswerWeight.get(i).getText().isEmpty())
+                return;
+        }
+        changeSubCreatePanel();
+    }
+    @Override
+    public void mouseDragged(MouseEvent e) {
+    }
+    
+    @Override
     public void actionPerformed(ActionEvent e) {
-        String actionCommand = ((JButton) e.getSource()).getActionCommand();
+        String actionCommand = e.getActionCommand();
+//        String actionCommand = ((JButton) e.getSource()).getActionCommand();
         statusLabel.setText("Натиснуто клавішу: " + actionCommand);
         switch (actionCommand) {
             case "Увійти" : 
@@ -54,10 +62,36 @@ public class ExpertSystemUI extends javax.swing.JFrame implements ActionListener
             case "Завершити створення опитування" : 
                 statusLabel.setText(es.createQuestionSystem(boxSystemName.getText()));
                 break;
+            case "comboBoxChanged":
+                String choosen = 
+                        (String)((JComboBox) e.getSource()).getSelectedItem();
+                statusLabel.setText("Обрано варіант: " + choosen);
+                for (int i = 0; i < QuestionNames.length; i++) {
+                    if (QuestionNames[i].equals(choosen)) {
+                        boxAnswer = new ArrayList<>();
+                        boxAnswerWeight = new ArrayList<>();
+                        currentTypeSelected = i;
+                        changeSubCreatePanel();
+                        break;
+                    }                        
+                }
+                subCreatePanel.revalidate();
+                validate();
+                break;
+            case "Додати Питання":
+                List<String> stringAnswers = new ArrayList();
+                List<String> stringWeights = new ArrayList();
+                for(int i = 0; i < boxAnswer.size(); i++) {
+                    stringAnswers.add(boxAnswer.get(i).getText());
+                    stringWeights.add(boxAnswerWeight.get(i).getText());
+                }
+                statusLabel.setText(es.addQuestion(boxQuestion.getText(), 
+                        currentTypeSelected, stringAnswers, stringWeights));
+                break;                
             default : break;
         }
     }
-    
+
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -162,78 +196,170 @@ public class ExpertSystemUI extends javax.swing.JFrame implements ActionListener
         }
     
     protected JComponent makeConstructorMenu () {
-                JPanel constructorPanel = new JPanel(false);
-                JPanel createPanel = new JPanel(false);
-                JPanel viewPanel = new JPanel(false);
-                JPanel submitPanel = makeSubmitPanel();
-                
-                //createPanel               
-                JLabel labelCreateQuestion = new JLabel("Додати питання типу: ");
-                SpringLayout layoutCreate = new SpringLayout();
-                createPanel.setLayout (layoutCreate);
-                createPanel.add(labelCreateQuestion);
-                
-                
-                constructorPanel.setLayout (new GridLayout(3,1));
-                
-                constructorPanel.add(createPanel);
-                constructorPanel.add(viewPanel);
-                constructorPanel.add(submitPanel);
-                
-                return constructorPanel;
+        JPanel constructorPanel = new JPanel(false);
+        JPanel createPanel = makeCreatePanel();
+        JPanel viewPanel = new JPanel(false);
+        JPanel submitPanel = makeSubmitPanel();
+
+        constructorPanel.setLayout (new GridLayout(3,1));
+
+        constructorPanel.add(createPanel);
+        constructorPanel.add(viewPanel);
+        constructorPanel.add(submitPanel);
+
+        constructorPanel.addMouseMotionListener(this);
+        return constructorPanel;
+    }
+    
+    protected JPanel makeCreatePanel () {
+        JPanel createPanel = new JPanel(false);
+        JLabel labelCreateQuestion = new JLabel("Додати питання типу: ");
+        JComboBox boxQuestionType = new JComboBox(QuestionNames);
+        boxQuestionType.addActionListener(this);
+        JButton buttonAddQuestion = new JButton("Додати Питання");
+        buttonAddQuestion.addActionListener(this);
+        boxQuestion = new JTextArea(2, 100);
+        boxQuestion.setLineWrap(true);
+        JScrollPane scrollPane = new JScrollPane(boxQuestion);
+        subCreatePanel = new JPanel() {
+            @Override
+            public Dimension getPreferredSize() {
+                 return new Dimension(700, 2048);
+             }
+         };
+        JScrollPane scrollPane2 = new JScrollPane(subCreatePanel);
+        
+        boxAnswer = new ArrayList<>();
+        boxAnswerWeight = new ArrayList<>();
+        currentTypeSelected = 0;
+        changeSubCreatePanel();
+        
+        SpringLayout layoutCreate = new SpringLayout();
+        layoutCreate.putConstraint(SpringLayout.WEST, labelCreateQuestion, 5,
+                SpringLayout.WEST, createPanel);                                
+        layoutCreate.putConstraint(SpringLayout.VERTICAL_CENTER, labelCreateQuestion, 0,
+                SpringLayout.VERTICAL_CENTER, boxQuestionType);        
+        layoutCreate.putConstraint(SpringLayout.WEST, boxQuestionType, 5,
+                SpringLayout.EAST, labelCreateQuestion);                                
+        layoutCreate.putConstraint(SpringLayout.NORTH, boxQuestionType, 0,
+                SpringLayout.NORTH, createPanel);
+        layoutCreate.putConstraint(SpringLayout.EAST, buttonAddQuestion, 0,
+                SpringLayout.EAST, createPanel);                                
+        layoutCreate.putConstraint(SpringLayout.NORTH, buttonAddQuestion, 0,
+                SpringLayout.NORTH, createPanel);
+        layoutCreate.putConstraint(SpringLayout.WIDTH, scrollPane, 0,
+                SpringLayout.WIDTH, createPanel);                                
+        layoutCreate.putConstraint(SpringLayout.NORTH, scrollPane, 0,
+                SpringLayout.SOUTH, boxQuestionType);        
+        layoutCreate.putConstraint(SpringLayout.WIDTH, scrollPane2, 0,
+                SpringLayout.WIDTH, createPanel);                                
+        layoutCreate.putConstraint(SpringLayout.NORTH, scrollPane2, 0,
+                SpringLayout.SOUTH, scrollPane);
+        layoutCreate.putConstraint(SpringLayout.SOUTH, scrollPane2, 0,
+                SpringLayout.SOUTH, createPanel);
+        createPanel.setLayout (layoutCreate);
+        
+        createPanel.add(labelCreateQuestion);
+        createPanel.add(boxQuestionType);
+        createPanel.add(buttonAddQuestion);
+        createPanel.add(scrollPane);
+        createPanel.add(scrollPane2);
+       
+        return createPanel;
+    }
+    
+    protected void changeSubCreatePanel() {
+        subCreatePanel.removeAll();
+        boxAnswer.add(new JTextField(20));
+        boxAnswerWeight.add(new JTextField(5));
+        SpringLayout layoutSubCreate = new SpringLayout();
+        switch (currentTypeSelected) {
+            case 0:
+            case 3:
+                break;
+            case 4:
+                for(int i = 0; i < boxAnswer.size(); i++) {
+                    subCreatePanel.add(boxAnswer.get(i));
+                    layoutSubCreate.putConstraint(SpringLayout.WEST, 
+                            boxAnswer.get(i), 5,
+                            SpringLayout.WEST, subCreatePanel);                                
+                    layoutSubCreate.putConstraint(SpringLayout.NORTH, 
+                            boxAnswer.get(i), i * 25,
+                            SpringLayout.NORTH, subCreatePanel);
+                }
+                break;
+            default:
+                for(int i = 0; i < boxAnswer.size(); i++) {
+                    subCreatePanel.add(boxAnswer.get(i));
+                    subCreatePanel.add(boxAnswerWeight.get(i));
+                    layoutSubCreate.putConstraint(SpringLayout.WEST, 
+                            boxAnswer.get(i), 5,
+                            SpringLayout.WEST, subCreatePanel);                                
+                    layoutSubCreate.putConstraint(SpringLayout.NORTH, 
+                            boxAnswer.get(i), i * 25,
+                            SpringLayout.NORTH, subCreatePanel);
+                    layoutSubCreate.putConstraint(SpringLayout.WEST, 
+                            boxAnswerWeight.get(i), 5,
+                            SpringLayout.EAST, boxAnswer.get(i));                                
+                    layoutSubCreate.putConstraint(SpringLayout.NORTH, 
+                            boxAnswerWeight.get(i), i * 25,
+                            SpringLayout.NORTH, subCreatePanel);
+                }
         }
+        subCreatePanel.setLayout (layoutSubCreate);
+    }
     
     protected JPanel makeSubmitPanel () {
-                JPanel submitPanel = new JPanel(false);
-                JLabel labelSystemName = new JLabel("Ім’я опитування: ");
-                boxSystemName = new JTextField(25);
-                JButton buttonReg = new JButton("Завершити створення опитування");
-                buttonReg.addActionListener(this);
-                
-                SpringLayout submitLayout = new SpringLayout();
-                submitPanel.setLayout(submitLayout);
-                
-                submitLayout.putConstraint(SpringLayout.WEST, labelSystemName, 5,
-                        SpringLayout.WEST, submitPanel);                                
-                submitLayout.putConstraint(SpringLayout.VERTICAL_CENTER, labelSystemName, 0,
-                        SpringLayout.VERTICAL_CENTER, boxSystemName);
-                
-                submitLayout.putConstraint(SpringLayout.WEST, boxSystemName, 10,
-                        SpringLayout.EAST, labelSystemName);
-                submitLayout.putConstraint(SpringLayout.SOUTH, boxSystemName, 0,
-                        SpringLayout.SOUTH, submitPanel);
-                
-                submitLayout.putConstraint(SpringLayout.EAST, buttonReg, 0,
-                        SpringLayout.EAST, submitPanel);
-                submitLayout.putConstraint(SpringLayout.VERTICAL_CENTER, buttonReg, 0,
-                        SpringLayout.VERTICAL_CENTER, boxSystemName);
-                              
-                submitPanel.add(labelSystemName);
-                submitPanel.add(boxSystemName);
-                submitPanel.add(buttonReg);
-                
-                return submitPanel;
+        JPanel submitPanel = new JPanel(false);
+        JLabel labelSystemName = new JLabel("Ім’я опитування: ");
+        boxSystemName = new JTextField(25);
+        JButton buttonReg = new JButton("Завершити створення опитування");
+        buttonReg.addActionListener(this);
+
+        SpringLayout submitLayout = new SpringLayout();
+        submitPanel.setLayout(submitLayout);
+
+        submitLayout.putConstraint(SpringLayout.WEST, labelSystemName, 5,
+                SpringLayout.WEST, submitPanel);                                
+        submitLayout.putConstraint(SpringLayout.VERTICAL_CENTER, labelSystemName, 0,
+                SpringLayout.VERTICAL_CENTER, boxSystemName);
+
+        submitLayout.putConstraint(SpringLayout.WEST, boxSystemName, 10,
+                SpringLayout.EAST, labelSystemName);
+        submitLayout.putConstraint(SpringLayout.SOUTH, boxSystemName, 0,
+                SpringLayout.SOUTH, submitPanel);
+
+        submitLayout.putConstraint(SpringLayout.EAST, buttonReg, 0,
+                SpringLayout.EAST, submitPanel);
+        submitLayout.putConstraint(SpringLayout.VERTICAL_CENTER, buttonReg, 0,
+                SpringLayout.VERTICAL_CENTER, boxSystemName);
+
+        submitPanel.add(labelSystemName);
+        submitPanel.add(boxSystemName);
+        submitPanel.add(buttonReg);
+
+        return submitPanel;
     }
 
     protected JComponent makePollMenu () {
-                JPanel panel = new JPanel(false);
-                JLabel filler = new JLabel("");
-                filler.setHorizontalAlignment(JLabel.CENTER);
-                SpringLayout layout = new SpringLayout();
-                panel.setLayout (layout);
-                panel.add(filler);
-                return panel;
+            JPanel panel = new JPanel(false);
+            JLabel filler = new JLabel("");
+            filler.setHorizontalAlignment(JLabel.CENTER);
+            SpringLayout layout = new SpringLayout();
+            panel.setLayout (layout);
+            panel.add(filler);
+            return panel;
         }
 
         
     protected JComponent makeViewMenu () {
-                JPanel panel = new JPanel(false);
-                JLabel filler = new JLabel("");
-                filler.setHorizontalAlignment(JLabel.CENTER);
-                SpringLayout layout = new SpringLayout();
-                panel.setLayout (layout);
-                panel.add(filler);
-                return panel;
+            JPanel panel = new JPanel(false);
+            JLabel filler = new JLabel("");
+            filler.setHorizontalAlignment(JLabel.CENTER);
+            SpringLayout layout = new SpringLayout();
+            panel.setLayout (layout);
+            panel.add(filler);
+            return panel;
         }
             
     
@@ -272,6 +398,16 @@ public class ExpertSystemUI extends javax.swing.JFrame implements ActionListener
         });
     }
 
+    private final String[] QuestionNames = {
+            "Так чи ні",
+            "Вибір одного",
+            "Вибір декількох",
+            "Вкажіть число",
+            "Вкажіть інтервал",
+            "Вибір нечіткого інтервалу",
+            "Вибір подібного"
+        };
+
     private final ExpertSystem es;
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JTabbedPane ContentUi;
@@ -285,4 +421,10 @@ public class ExpertSystemUI extends javax.swing.JFrame implements ActionListener
     private JTextField boxExpertName;
     private JPasswordField boxExpertPass;
     private JTextField boxSystemName;
+    private JPanel subCreatePanel;
+    private JTextArea boxQuestion;
+    private List<JTextField> boxAnswer;
+    private List<JTextField> boxAnswerWeight;
+    private int currentTypeSelected;
+    
 }

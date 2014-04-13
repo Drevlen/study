@@ -10,6 +10,11 @@ package ES.ExpertSystem;
  *
  * @author drevlen
  */
-public class QuestionType4 {
+public class QuestionType4 extends Question {
+        QuestionType4(String question){
+        super.question = question;
+        super.qid = 0; // TODO useDBConnection
+        super.typeNum = 4;     
+    }
     
 }
