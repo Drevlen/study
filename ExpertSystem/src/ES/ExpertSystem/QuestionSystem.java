@@ -14,8 +14,15 @@ import java.util.ArrayList;
  */
 public class QuestionSystem {
     public QuestionSystem() {
+        name = "empty question system";
         qidOrder = new ArrayList();
         questions = new ArrayList();
+    }
+    public void setName(String newName){
+        name = newName;
+    }
+    public String getName(){
+        return name;
     }
     public int getSize() {
         return questions.size();
@@ -24,6 +31,10 @@ public class QuestionSystem {
         questions.add(question);
         qidOrder.add(question.getQuestionId());
     }
+    public Question getQuestion(int id){
+        return questions.get(qidOrder.get(id));
+    }
+    private String name;
     private List<Question> questions;
     private List<Integer> qidOrder;
 }

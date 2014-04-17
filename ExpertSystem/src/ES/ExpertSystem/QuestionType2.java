@@ -13,12 +13,18 @@ import java.util.List;
 public class QuestionType2 extends Question{
     QuestionType2(String question, List<String> answers, List<Double> weights) {
         super.question = question;
-        super.qid = 0; // TODO useDBConnection
+        super.qid = 0;
         super.typeNum = 2;
         assert answers.size() == weights.size();
         super.possibleAnswers = answers;
         weight = weights;
     }
+    
+    QuestionType2(String question, List<String> answers, List<Double> weights, int id) {
+        this(question, answers, weights);
+        super.qid = id;
+    }
+    @Override
     public double getWeight(Answer answer) {
         assert answer.qid == qid;
         for (int i = 0; i < possibleAnswers.size(); i++) {
@@ -27,6 +33,11 @@ public class QuestionType2 extends Question{
         }
         assert false;
         return -1;
+    }
+    
+    @Override
+    public List<Double> getWeightAnswers(){
+        return weight;
     }
     final private List<Double> weight;
 }

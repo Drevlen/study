@@ -12,14 +12,19 @@ import java.util.List;
  * @author drevlen
  */
 public class QuestionType3 extends Question {
-        QuestionType3(String question, List<String> answers, List<Double> weights) {
+    QuestionType3(String question, List<String> answers, List<Double> weights) {
         super.question = question;
-        super.qid = 0; // TODO useDBConnection
+        super.qid = 0;
         super.typeNum = 3;
         assert answers.size() == weights.size();
         super.possibleAnswers = answers;
         weight = weights;
     }
+    QuestionType3(String question, List<String> answers, List<Double> weights, int id) {
+        this(question, answers, weights);
+        super.qid = id;
+    }
+    @Override
     public double getWeight(Answer answer) {
         assert answer.qid == qid;
         double result = 0;
@@ -29,6 +34,10 @@ public class QuestionType3 extends Question {
         }
         assert false;
         return result;
+    }
+    @Override
+    public List<Double> getWeightAnswers(){
+        return weight;
     }
     final private List<Double> weight;
 }

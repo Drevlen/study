@@ -60,17 +60,23 @@ public class ExpertSystem {
     public String createQuestionSystem(String name) {
         if (name.isEmpty())
             return "Назва пуста";
+        if (currentUser == null)
+            return "Власник опитування невідомий. Увійдіть!";
         if (questionSystem.getSize() == 0)
             return "Жодного питання не додано";
         try {
             if (db.getAllSystems().contains(name))
                 return "Опитування з такою назвою вже існує";
+            questionSystem.setName(name);
+            if (db.addSystem(questionSystem, currentUser.getName()))
+                return "Опитування "+ name +" додано";
+            
         } catch (SQLException ex) {
             Logger.getLogger(ExpertSystem.class.getName()).log(Level.SEVERE, null, ex);
             return "Помилка з’єднання з базою " + ex.getSQLState();
         }
         
-        return "Додавання не реалізоване";
+        return "Додавання не здійснене";
     }
 
     public String addQuestion(String question, int type, 
@@ -82,30 +88,36 @@ public class ExpertSystem {
         Question anyQuestion;
         switch(type){
             case 0:
-                anyQuestion = new QuestionType1(question); break;
+                anyQuestion = new QuestionType1(question, questionSystem.getSize()); break;
             case 1:
                 anyQuestion = new QuestionType2(question, answers, 
-                        doubleWeights); break;
+                        doubleWeights, questionSystem.getSize()); break;
             case 2:
                 anyQuestion = new QuestionType3(question, answers, 
-                        doubleWeights); break;
+                        doubleWeights, questionSystem.getSize()); break;
             case 3:
-                anyQuestion = new QuestionType4(question); break;
+                anyQuestion = new QuestionType4(question, questionSystem.getSize()); break;
             case 4:
-                anyQuestion = new QuestionType5(question, answers); break;
+                anyQuestion = new QuestionType5(question, questionSystem.getSize()); break;
             case 5:
-                anyQuestion = new QuestionType1(question); break;
+                anyQuestion = new QuestionType6(question, answers, 
+                        doubleWeights, questionSystem.getSize()); break;
             case 6:
-                anyQuestion = new QuestionType1(question); break;
+                anyQuestion = new QuestionType7(question, answers, 
+                        doubleWeights, questionSystem.getSize()); break;
             default: return "Невідомий тип";
         }
         questionSystem.addQuestion(anyQuestion);
-        return "Додано питання";
+        return "Додано питання " + Integer.toString(questionSystem.getSize());
     }
    
+    public QuestionSystem getSystem(){
+        return questionSystem;
+    }
+    
     private final DBConnection db;
     private List<String> availableQuestionSystems;
-    private QuestionSystem questionSystem;
+    private final QuestionSystem questionSystem;
     private Expert currentUser;
     
         

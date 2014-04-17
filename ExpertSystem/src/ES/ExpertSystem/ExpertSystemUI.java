@@ -35,9 +35,18 @@ public class ExpertSystemUI extends javax.swing.JFrame implements ActionListener
     @Override
     public void mouseMoved(MouseEvent e) {
         for (int i = boxAnswer.size() - 1; i >= 0; i--) {
-            if (boxAnswer.get(i).getText().isEmpty() &&
-                    boxAnswerWeight.get(i).getText().isEmpty())
-                return;
+            //TODO update to different  currentTypeSelected
+            if (currentTypeSelected == 1 || currentTypeSelected == 2 || currentTypeSelected == 6)
+                if (boxAnswer.get(i).getText().isEmpty() ||
+                        boxAnswerWeight.get(i).getText().isEmpty())
+                    return;
+            if (currentTypeSelected == 5)
+                if (boxAnswer.get(i).getText().isEmpty() ||
+                        boxAnswerWeight.get(4 * i).getText().isEmpty() ||
+                        boxAnswerWeight.get(4 * i + 1).getText().isEmpty() ||
+                        boxAnswerWeight.get(4 * i + 2).getText().isEmpty() ||
+                        boxAnswerWeight.get(4 * i + 3).getText().isEmpty())
+                    return;
         }
         changeSubCreatePanel();
     }
@@ -48,7 +57,6 @@ public class ExpertSystemUI extends javax.swing.JFrame implements ActionListener
     @Override
     public void actionPerformed(ActionEvent e) {
         String actionCommand = e.getActionCommand();
-//        String actionCommand = ((JButton) e.getSource()).getActionCommand();
         statusLabel.setText("Натиснуто клавішу: " + actionCommand);
         switch (actionCommand) {
             case "Увійти" : 
@@ -82,12 +90,32 @@ public class ExpertSystemUI extends javax.swing.JFrame implements ActionListener
                 List<String> stringAnswers = new ArrayList();
                 List<String> stringWeights = new ArrayList();
                 for(int i = 0; i < boxAnswer.size(); i++) {
-                    stringAnswers.add(boxAnswer.get(i).getText());
-                    stringWeights.add(boxAnswerWeight.get(i).getText());
+                    if (boxAnswer.get(i).getText().isEmpty())
+                        continue;
+                    if (currentTypeSelected == 5) {
+                        stringAnswers.add(boxAnswer.get(i).getText());
+                        stringWeights.add(boxAnswerWeight.get(4*i).getText());
+                        stringWeights.add(boxAnswerWeight.get(4*i+1).getText());
+                        stringWeights.add(boxAnswerWeight.get(4*i+2).getText());
+                        stringWeights.add(boxAnswerWeight.get(4*i+3).getText());
+                    } else {
+                        stringAnswers.add(boxAnswer.get(i).getText());
+                        stringWeights.add(boxAnswerWeight.get(i).getText());   
+                    }                    
                 }
                 statusLabel.setText(es.addQuestion(boxQuestion.getText(), 
                         currentTypeSelected, stringAnswers, stringWeights));
-                break;                
+                break;  
+                case "Наступне Питання":
+                    currentQuestionSelected++; 
+                    statusLabel.setText("Питання №" 
+                            + Integer.toString(currentQuestionSelected)); 
+                    changeSubViewPanel(); break;
+                case "Попереднє Питання":
+                    currentQuestionSelected--; 
+                    statusLabel.setText("Питання №" 
+                            + Integer.toString(currentQuestionSelected)); 
+                    changeSubViewPanel(); break;
             default : break;
         }
     }
@@ -198,7 +226,7 @@ public class ExpertSystemUI extends javax.swing.JFrame implements ActionListener
     protected JComponent makeConstructorMenu () {
         JPanel constructorPanel = new JPanel(false);
         JPanel createPanel = makeCreatePanel();
-        JPanel viewPanel = new JPanel(false);
+        JPanel viewPanel = makeViewPanel();
         JPanel submitPanel = makeSubmitPanel();
 
         constructorPanel.setLayout (new GridLayout(3,1));
@@ -270,25 +298,109 @@ public class ExpertSystemUI extends javax.swing.JFrame implements ActionListener
     
     protected void changeSubCreatePanel() {
         subCreatePanel.removeAll();
-        boxAnswer.add(new JTextField(20));
-        boxAnswerWeight.add(new JTextField(5));
+        JLabel labelAnswer = new JLabel("Варіант відповіді");
+        JLabel labelWeight = new JLabel("Вага відповіді");
         SpringLayout layoutSubCreate = new SpringLayout();
         switch (currentTypeSelected) {
             case 0:
             case 3:
-                break;
             case 4:
+                break;
+            case 5:
+                labelAnswer = new JLabel("Варіант відповіді");
+                JLabel labelInterval = new JLabel("Чисельний інтервал");
+                labelWeight = new JLabel("Правильність на кінцях інтервалу");
+                boxAnswer.add(new JTextField(20));
+                boxAnswerWeight.add(new JTextField(10));
+                boxAnswerWeight.add(new JTextField(10));
+                boxAnswerWeight.add(new JTextField(10));
+                boxAnswerWeight.add(new JTextField(10));
+                
+                subCreatePanel.add(labelAnswer);
+                subCreatePanel.add(labelInterval);
+                subCreatePanel.add(labelWeight);
+                layoutSubCreate.putConstraint(SpringLayout.WEST, 
+                        labelAnswer, 10,
+                        SpringLayout.WEST, subCreatePanel);                                
+                layoutSubCreate.putConstraint(SpringLayout.NORTH, 
+                        labelAnswer, 0,
+                        SpringLayout.NORTH, subCreatePanel);
+                layoutSubCreate.putConstraint(SpringLayout.WEST, 
+                        labelInterval, 120,
+                        SpringLayout.EAST, labelAnswer);                                
+                layoutSubCreate.putConstraint(SpringLayout.NORTH, 
+                        labelInterval, 0,
+                        SpringLayout.NORTH, subCreatePanel);
+                layoutSubCreate.putConstraint(SpringLayout.WEST, 
+                        labelWeight, 130,
+                        SpringLayout.EAST, labelInterval);                                
+                layoutSubCreate.putConstraint(SpringLayout.NORTH, 
+                        labelWeight, 0,
+                        SpringLayout.NORTH, subCreatePanel);
+                
                 for(int i = 0; i < boxAnswer.size(); i++) {
                     subCreatePanel.add(boxAnswer.get(i));
                     layoutSubCreate.putConstraint(SpringLayout.WEST, 
                             boxAnswer.get(i), 5,
                             SpringLayout.WEST, subCreatePanel);                                
                     layoutSubCreate.putConstraint(SpringLayout.NORTH, 
-                            boxAnswer.get(i), i * 25,
+                            boxAnswer.get(i), (i+1) * 25,
+                            SpringLayout.NORTH, subCreatePanel);
+
+                    subCreatePanel.add(boxAnswerWeight.get(4 * i));
+                    layoutSubCreate.putConstraint(SpringLayout.WEST, 
+                            boxAnswerWeight.get(4 * i), 5,
+                            SpringLayout.EAST, boxAnswer.get(i));                                
+                    layoutSubCreate.putConstraint(SpringLayout.NORTH, 
+                            boxAnswerWeight.get(4 * i), (i+1) * 25,
+                            SpringLayout.NORTH, subCreatePanel);
+                    
+                    subCreatePanel.add(boxAnswerWeight.get(4 * i+1));
+                    layoutSubCreate.putConstraint(SpringLayout.WEST, 
+                            boxAnswerWeight.get(4 * i+1), 5,
+                            SpringLayout.EAST, boxAnswerWeight.get(4 * i));                                
+                    layoutSubCreate.putConstraint(SpringLayout.NORTH, 
+                            boxAnswerWeight.get(4 * i+1), (i+1) * 25,
+                            SpringLayout.NORTH, subCreatePanel);
+                    
+                    subCreatePanel.add(boxAnswerWeight.get(4 * i+2));
+                    layoutSubCreate.putConstraint(SpringLayout.WEST, 
+                            boxAnswerWeight.get(4 * i+2), 5,
+                            SpringLayout.EAST, boxAnswerWeight.get(4 * i+1));                                
+                    layoutSubCreate.putConstraint(SpringLayout.NORTH, 
+                            boxAnswerWeight.get(4 * i+2), (i+1) * 25,
+                            SpringLayout.NORTH, subCreatePanel);
+                    
+                    subCreatePanel.add(boxAnswerWeight.get(4 * i+3));
+                    layoutSubCreate.putConstraint(SpringLayout.WEST, 
+                            boxAnswerWeight.get(4 * i+3), 5,
+                            SpringLayout.EAST, boxAnswerWeight.get(4 * i+2));                                
+                    layoutSubCreate.putConstraint(SpringLayout.NORTH, 
+                            boxAnswerWeight.get(4 * i+3), (i+1) * 25,
                             SpringLayout.NORTH, subCreatePanel);
                 }
                 break;
+            case 1:
+            case 2:
+            case 6:
             default:
+                boxAnswer.add(new JTextField(20));
+                boxAnswerWeight.add(new JTextField(5));
+                subCreatePanel.add(labelAnswer);
+                subCreatePanel.add(labelWeight);
+                layoutSubCreate.putConstraint(SpringLayout.WEST, 
+                        labelAnswer, 10,
+                        SpringLayout.WEST, subCreatePanel);                                
+                layoutSubCreate.putConstraint(SpringLayout.NORTH, 
+                        labelAnswer, 0,
+                        SpringLayout.NORTH, subCreatePanel);
+                layoutSubCreate.putConstraint(SpringLayout.WEST, 
+                        labelWeight, 100,
+                        SpringLayout.EAST, labelAnswer);                                
+                layoutSubCreate.putConstraint(SpringLayout.NORTH, 
+                        labelWeight, 0,
+                        SpringLayout.NORTH, subCreatePanel);
+                
                 for(int i = 0; i < boxAnswer.size(); i++) {
                     subCreatePanel.add(boxAnswer.get(i));
                     subCreatePanel.add(boxAnswerWeight.get(i));
@@ -296,17 +408,83 @@ public class ExpertSystemUI extends javax.swing.JFrame implements ActionListener
                             boxAnswer.get(i), 5,
                             SpringLayout.WEST, subCreatePanel);                                
                     layoutSubCreate.putConstraint(SpringLayout.NORTH, 
-                            boxAnswer.get(i), i * 25,
+                            boxAnswer.get(i), (1 + i) * 25,
                             SpringLayout.NORTH, subCreatePanel);
                     layoutSubCreate.putConstraint(SpringLayout.WEST, 
                             boxAnswerWeight.get(i), 5,
                             SpringLayout.EAST, boxAnswer.get(i));                                
                     layoutSubCreate.putConstraint(SpringLayout.NORTH, 
-                            boxAnswerWeight.get(i), i * 25,
+                            boxAnswerWeight.get(i), (1 + i) * 25,
                             SpringLayout.NORTH, subCreatePanel);
                 }
         }
         subCreatePanel.setLayout (layoutSubCreate);
+    }
+    
+    protected JPanel makeViewPanel () {
+        JPanel viewPanel = new JPanel(false);
+        JButton buttonPrevQuestion = new JButton("Попереднє Питання");
+        buttonPrevQuestion.addActionListener(this);
+        JButton buttonNextQuestion = new JButton("Наступне Питання");
+        buttonNextQuestion.addActionListener(this);
+        
+        boxReadQuestion = new JTextArea(2, 100);
+        boxReadQuestion.setLineWrap(true);
+        boxReadQuestion.setEditable(false);
+        boxReadQuestion.setBackground(new Color(255, 255, 255, 0));
+        JScrollPane scrollPane = new JScrollPane(boxReadQuestion);
+        scrollPane.setBorder(null);
+        subViewPanel = new JPanel() {
+            @Override
+            public Dimension getPreferredSize() {
+                 return new Dimension(700, 2048);
+             }
+         };
+        JScrollPane scrollPaneOptions = new JScrollPane(subViewPanel);
+        
+        SpringLayout layoutCreate = new SpringLayout();  
+        
+        layoutCreate.putConstraint(SpringLayout.WEST, buttonPrevQuestion, 0,
+                SpringLayout.WEST, viewPanel);                                
+        layoutCreate.putConstraint(SpringLayout.NORTH, buttonPrevQuestion, 0,
+                SpringLayout.NORTH, viewPanel); 
+        layoutCreate.putConstraint(SpringLayout.EAST, buttonNextQuestion, 0,
+                SpringLayout.EAST, viewPanel);                                
+        layoutCreate.putConstraint(SpringLayout.NORTH, buttonNextQuestion, 0,
+                SpringLayout.NORTH, viewPanel); 
+        
+        layoutCreate.putConstraint(SpringLayout.WIDTH, scrollPaneOptions, 0,
+                SpringLayout.WIDTH, viewPanel);                                
+        layoutCreate.putConstraint(SpringLayout.NORTH, scrollPaneOptions, 0,
+                SpringLayout.SOUTH, scrollPane);
+        layoutCreate.putConstraint(SpringLayout.SOUTH, scrollPaneOptions, 0,
+                SpringLayout.SOUTH, viewPanel);
+        
+        layoutCreate.putConstraint(SpringLayout.WIDTH, scrollPane, 0,
+                SpringLayout.WIDTH, viewPanel);                                
+        layoutCreate.putConstraint(SpringLayout.NORTH, scrollPane, 0,
+                SpringLayout.SOUTH, buttonPrevQuestion);        
+        viewPanel.setLayout (layoutCreate);
+
+        viewPanel.add(buttonPrevQuestion);
+        viewPanel.add(buttonNextQuestion);
+        viewPanel.add(scrollPane);
+        viewPanel.add(scrollPaneOptions);
+       
+        return viewPanel;
+    }
+    
+    protected void changeSubViewPanel() {
+        if (currentQuestionSelected < 0 
+                || currentQuestionSelected >= es.getSystem().getSize())
+            return;
+        Question question = es.getSystem().getQuestion(currentQuestionSelected);
+        boxReadQuestion.setText(question.getQuestion());
+        switch (question.getType()){
+            case 1:
+                
+                break;
+        }
     }
     
     protected JPanel makeSubmitPanel () {
@@ -350,7 +528,6 @@ public class ExpertSystemUI extends javax.swing.JFrame implements ActionListener
             panel.add(filler);
             return panel;
         }
-
         
     protected JComponent makeViewMenu () {
             JPanel panel = new JPanel(false);
@@ -422,9 +599,12 @@ public class ExpertSystemUI extends javax.swing.JFrame implements ActionListener
     private JPasswordField boxExpertPass;
     private JTextField boxSystemName;
     private JPanel subCreatePanel;
+    private JPanel subViewPanel;
     private JTextArea boxQuestion;
+    private JTextArea boxReadQuestion;
     private List<JTextField> boxAnswer;
     private List<JTextField> boxAnswerWeight;
     private int currentTypeSelected;
+    private int currentQuestionSelected;
     
 }

@@ -6,15 +6,29 @@
 
 package ES.ExpertSystem;
 
+import java.util.List;
+
 /**
  *
  * @author drevlen
  */
 public class QuestionType4 extends Question {
-        QuestionType4(String question){
+    QuestionType4(String question){
         super.question = question;
-        super.qid = 0; // TODO useDBConnection
+        super.qid = 0;
         super.typeNum = 4;     
     }
     
+    QuestionType4(String question, int id){
+        this(question);
+        super.qid = id; 
+    }
+    @Override
+    public double getWeight(Answer answer) {
+        return Double.parseDouble(answer.value);
+    }
+    @Override
+    public List<Double> getWeightAnswers(){
+        return null;
+    }
 }

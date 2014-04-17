@@ -6,10 +6,33 @@
 
 package ES.ExpertSystem;
 
+import java.util.List;
+
 /**
  *
  * @author drevlen
  */
-public class QuestionType7 {
+public class QuestionType7 extends Question {
+    QuestionType7(String question, List<String> answers, List<Double> weights) {
+        super.question = question;
+        super.qid = 0;
+        super.typeNum = 7;
+        assert answers.size() == weights.size();
+        super.possibleAnswers = answers;
+        weight = weights;
+    }
     
+    QuestionType7(String question, List<String> answers, List<Double> weights, int id) {
+        this(question, answers, weights);
+        super.qid = id;
+    }
+    @Override
+    public double getWeight(Answer answer) {
+        return weight.get(possibleAnswers.indexOf(answer.value));
+    }
+    @Override
+    public List<Double> getWeightAnswers(){
+        return weight;
+    }
+    final private List<Double> weight;
 }

@@ -14,7 +14,9 @@ public class Expert {
     public Expert(String expertName) {
         name = expertName;
     }
-    
-    String name;
+    public String getName() {
+        return name;
+    }
+    private final String name;
     QuestionSystem answers;
 }

@@ -6,6 +6,8 @@
 
 package ES.ExpertSystem;
 
+import java.util.List;
+
 /**
  * @brief yes no questions
  * @author drevlen
@@ -13,12 +15,20 @@ package ES.ExpertSystem;
 public class QuestionType1 extends Question {
     QuestionType1(String question){
         super.question = question;
-        super.qid = 0; // TODO useDBConnection
-        super.typeNum = 1;
-        super.possibleAnswers.add("Так");
-        super.possibleAnswers.add("Ні");        
+        super.qid = 0;
+        super.typeNum = 1;     
+    }
+    QuestionType1(String question, int id){
+        this(question);
+        super.qid = id;
     }
     
+    @Override
+    public List<Double> getWeightAnswers(){
+        return null;
+    }
+    
+    @Override
     public double getWeight(Answer answer) {
         assert answer.qid == qid;
         if ("Так".equals(answer.value)) {

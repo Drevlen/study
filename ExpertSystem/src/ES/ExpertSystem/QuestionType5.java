@@ -13,10 +13,23 @@ import java.util.List;
  * @author drevlen
  */
 public class QuestionType5 extends Question{
-        QuestionType5(String question, List<String> answers) {
+    QuestionType5(String question) {
         super.question = question;
-        super.qid = 0; // TODO useDBConnection
+        super.qid = 0;
         super.typeNum = 5;
-        super.possibleAnswers = answers;
+    }
+    
+    QuestionType5(String question, int id) {
+        this(question);
+        super.qid = id;
+    }
+    @Override
+    public double getWeight(Answer answer) {
+        //TODO weight of interval
+        return Double.parseDouble(answer.value);
+    }
+    @Override
+    public List<Double> getWeightAnswers(){
+        return null;
     }
 }
