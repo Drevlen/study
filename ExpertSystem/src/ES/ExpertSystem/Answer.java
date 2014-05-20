@@ -11,11 +11,12 @@ package ES.ExpertSystem;
  * @author drevlen
  */
 public class Answer {
-    Answer (int questionID, String answer) {
+    Answer (int questionID, String name, String answer) {
         qid = questionID;
+        expertName = name;
         value = answer;
     }
     final public int qid;
+    final public String expertName;
     final public String value;
-    
 }

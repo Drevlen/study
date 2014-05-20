@@ -18,6 +18,13 @@ public class QuestionSystem {
         qidOrder = new ArrayList();
         questions = new ArrayList();
     }
+    
+    public QuestionSystem(String name_) {
+        name = name_;
+        qidOrder = new ArrayList();
+        questions = new ArrayList();
+    }
+    
     public void setName(String newName){
         name = newName;
     }
@@ -32,9 +39,29 @@ public class QuestionSystem {
         qidOrder.add(question.getQuestionId());
     }
     public Question getQuestion(int id){
-        return questions.get(qidOrder.get(id));
+        for (Question question : questions) {
+            if (question.getQuestionId() == qidOrder.get(id))
+                return question;
+        }
+        return null;
     }
+    
+    public boolean hasQid(int qid) {
+        for(Question question : questions) 
+            if (question.getQuestionId() == qid)
+                return true;
+        return false;
+    }
+    
+    public List<Integer> getGroupedQid(Integer type) {
+        List<Integer> qids = new ArrayList<>();
+        for(Question question : questions) 
+            if (question.getType() == type)
+                qids.add(question.getQuestionId());
+        return qids;
+    }
+    
     private String name;
-    private List<Question> questions;
-    private List<Integer> qidOrder;
+    private final List<Question> questions;
+    private final List<Integer> qidOrder;
 }

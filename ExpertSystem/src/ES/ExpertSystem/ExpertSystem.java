@@ -8,6 +8,7 @@ package ES.ExpertSystem;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -30,7 +31,8 @@ public class ExpertSystem {
             }
         } catch (SQLException ex) {
             Logger.getLogger(ExpertSystem.class.getName()).log(Level.SEVERE, null, ex);
-            return "Помилка з’єднання з базою " + ex.getSQLState();
+            return "Помилка з’єднання з базою " 
+                    + ex.getSQLState() + " " + ex.getMessage();
         }
         return "Невірний логін або пароль";
     }
@@ -52,7 +54,8 @@ public class ExpertSystem {
             }
         } catch (SQLException ex) {
             Logger.getLogger(ExpertSystem.class.getName()).log(Level.SEVERE, null, ex);
-            return "Помилка з’єднання з базою " + ex.getSQLState();
+            return "Помилка з’єднання з базою " 
+                    + ex.getSQLState() + " " + ex.getMessage();
         }
         return "Невірний логін або пароль";
     }
@@ -73,7 +76,8 @@ public class ExpertSystem {
             
         } catch (SQLException ex) {
             Logger.getLogger(ExpertSystem.class.getName()).log(Level.SEVERE, null, ex);
-            return "Помилка з’єднання з базою " + ex.getSQLState();
+            return "Помилка з’єднання з базою " 
+                    + ex.getSQLState() + " " + ex.getMessage();
         }
         
         return "Додавання не здійснене";
@@ -81,6 +85,15 @@ public class ExpertSystem {
 
     public String addQuestion(String question, int type, 
             List<String> answers, List<String> weights) {
+        if (question.isEmpty())
+            return "Помилка. Питання не заповнене.";
+        if (type > 0 && type != 3 && type != 4) {
+            if (answers.isEmpty())
+                return "Помилка. Не вказано жодного варіанту відповіді.";
+            if (weights.isEmpty())
+                return "Помилка. Не вказано ваги варіантів відповіді.";
+        }
+            
         List<Double> doubleWeights = new ArrayList();
         for (String weight : weights) {
             doubleWeights.add(Double.parseDouble(weight));
@@ -111,14 +124,267 @@ public class ExpertSystem {
         return "Додано питання " + Integer.toString(questionSystem.getSize());
     }
    
-    public QuestionSystem getSystem(){
+    public String addAnswer(String answer, int questionID) {
+        if (currentUser == null)
+            return "Експерт невідомий. Увійдіть!";
+        Question question = questionSystem.getQuestion(questionID);
+        if (question == null)
+            return "Помилка питання не відоме.";
+        try {
+            db.addAnswer(currentUser.getName(), question.getQuestionId(), answer);
+        } catch (SQLException ex) {
+            Logger.getLogger(ExpertSystem.class.getName()).log(Level.SEVERE, null, ex);
+            return "Помилка з’єднання з базою " 
+                    + ex.getSQLState() + " " + ex.getMessage();
+        }
+        
+        return "Відповідь додано.";
+    }
+    
+    public String selectSystem(String name) {
+        try {
+            if (currentUser == null)
+                return "Невідомий користувач. Увійдіть.";
+            questionSystem = new QuestionSystem(name);
+            List<Integer> qidOrder = db.getOrder(name);
+            if (qidOrder.isEmpty())
+                return "Не вдалось знайти опитування";
+            
+            for (Integer qid : qidOrder) {
+                questionSystem.addQuestion(db.getQuestion(name, qid));
+            }
+            
+            return "Обрано опитування " + name;
+            
+        } catch (SQLException ex) {
+            Logger.getLogger(ExpertSystem.class.getName()).log(Level.SEVERE, null, ex);
+            return "Помилка з’єднання з базою " 
+                    + ex.getSQLState() + " " + ex.getMessage();
+        }
+
+    }
+    
+    public List<String> getAllSystemsOwned() {
+        try {
+            List<String> systems = db.getAllSystems(currentUser.getName());
+            return systems;
+            
+        } catch (SQLException ex) {
+            Logger.getLogger(ExpertSystem.class.getName()).log(Level.SEVERE, null, ex);
+            return null;
+        }
+    }
+    
+    public List<String> getAllSystems() {
+        try {
+            List<String> systems = db.getAllSystems();
+            return systems;
+            
+        } catch (SQLException ex) {
+            Logger.getLogger(ExpertSystem.class.getName()).log(Level.SEVERE, null, ex);
+            return null;
+        }
+    }
+    
+    public List<String> getAllExperts() {
+        try {
+            List<String> systems = db.getAllExpers();
+            return systems;
+            
+        } catch (SQLException ex) {
+            Logger.getLogger(ExpertSystem.class.getName()).log(Level.SEVERE, null, ex);
+            return null;
+        }
+    }
+    
+    public QuestionSystem getSystem() {
         return questionSystem;
     }
     
-    private final DBConnection db;
-    private List<String> availableQuestionSystems;
-    private final QuestionSystem questionSystem;
-    private Expert currentUser;
+    public void clearSystem() {
+        questionSystem = null;
+        questionSystem = new QuestionSystem();
+    }
     
+    public Expert getExpert() {
+        return currentUser;
+    }
+    
+    public List<String> getBestExpert() {
+        try {
+        if (questionSystem == null)
+            return null;
+        if (currentUser == null)
+            return null;
+        List<Answer> answers = db.getAnswers();
+        List<String> experts = new ArrayList<>();
+        for (Answer answer : answers) {
+            if (!experts.contains(answer.expertName)
+                    && questionSystem.hasQid(answer.qid))
+                experts.add(answer.expertName);
+        }
+
+        ArrayList<String> expertsWeight = new ArrayList<>();
+        if (experts.size() == 1) {
+            expertsWeight.add(experts.get(0) + "_1.0");
+            return expertsWeight;
+        }
+        if (experts.isEmpty())
+            return null;
         
+        
+        List<Double> firstTypeAnswers = qualityByType(experts, answers, 1);
+        List<Double> secondTypeAnswers = qualityByType(experts, answers, 2);
+        List<Double> thirdTypeAnswers = qualityByType(experts, answers, 3);
+        List<Double> fourthTypeAnswers = qualityByType(experts, answers, 4);
+        List<Double> fifthTypeAnswers = qualityByType(experts, answers, 5);
+        List<Double> sixthTypeAnswers = qualityByType(experts, answers, 6);
+        List<Double> seventhTypeAnswers = qualityByType(experts, answers, 7);
+        
+        List<Integer> firstType = questionSystem.getGroupedQid(1);
+        List<Integer> secondType = questionSystem.getGroupedQid(2);
+        List<Integer> thirdType = questionSystem.getGroupedQid(3);
+        List<Integer> fourthType = questionSystem.getGroupedQid(4);
+        List<Integer> fifthType = questionSystem.getGroupedQid(5);
+        List<Integer> sixthType = questionSystem.getGroupedQid(6);
+        List<Integer> seventhType = questionSystem.getGroupedQid(7);
+        
+        int numQuestions = questionSystem.getSize();
+        double[] quality = new double[experts.size()];
+        //normalize 
+        for (int i = 0; i < experts.size(); i++) {
+            quality[i] += firstType.size() * 
+                    firstTypeAnswers.get(i) / numQuestions;
+            quality[i] += secondType.size() * 
+                    secondTypeAnswers.get(i) / numQuestions;
+            quality[i] += thirdType.size() * 
+                    thirdTypeAnswers.get(i) / numQuestions;
+            quality[i] += fourthType.size() * 
+                    fourthTypeAnswers.get(i) / numQuestions;
+            quality[i] += fifthType.size() * 
+                    fifthTypeAnswers.get(i) / numQuestions;
+            quality[i] += sixthType.size() * 
+                    sixthTypeAnswers.get(i) / numQuestions;
+            quality[i] += seventhType.size() * 
+                    seventhTypeAnswers.get(i) / numQuestions;
+        }    
+        
+        double sum = 0;
+        for (Double q : quality) 
+            sum += q;
+        
+        for (int i = 0; i < experts.size(); i++) {
+            expertsWeight.add(experts.get(i) + "_" 
+                    + Double.toString(quality[i] / sum));
+        }
+        return expertsWeight;
+        
+        } catch (SQLException ex) {
+            Logger.getLogger(ExpertSystem.class.getName()).log(Level.SEVERE, null, ex);
+            return null;
+        }
+    }
+    
+List<Double> qualityByType(List<String> experts, List<Answer> answers, int type) {
+    //reading
+    double[][] sumMatrix = new double[experts.size()][experts.size()];
+    for(int i = 0; i < questionSystem.getSize(); i++) {
+        Question question = questionSystem.getQuestion(i);
+        if (question.getType() != type)
+            continue;
+        List<Answer> relevantAnswers = new ArrayList<>();
+        for (Answer answer : answers)
+            if (answer.qid == question.getQuestionId())
+                relevantAnswers.add(answer);
+        
+        List<List<Double> > questionMatrix = question.getWeight(experts, relevantAnswers);
+        for (int j = 0; j < questionMatrix.size(); j++) {
+            for (int k = 0; k < questionMatrix.get(j).size(); k++) {
+                sumMatrix[j][j + k + 1] += questionMatrix.get(j).get(k);
+            }
+        }                
+    }
+    //normalize matrix
+    double sum = 0;
+    for(int i = 0; i < experts.size(); i++) 
+        for (int j = 0; j < experts.size(); j++)
+            sum += sumMatrix[i][j];
+    if (sum == 0)
+        sum = 1;
+    for(int i = 0; i < experts.size(); i++) 
+        for (int j = 0; j < experts.size(); j++)
+            sumMatrix[i][j] = sumMatrix[i][j] / sum;
+    
+    //combine to experts
+    List<Double> quality = new ArrayList<>();
+    for(int i = 0; i < experts.size(); i++) {
+        double singleQuality = 0;
+        for (int j = 0; j < experts.size(); j++)
+            singleQuality += sumMatrix[i][j] + sumMatrix[j][i];
+        quality.add(singleQuality);
+    }
+    
+    //normalize experts
+    sum = 0;
+    for (double q : quality) 
+        sum += q;
+    if (sum == 0)
+        sum = 1;
+    List<Double> normalizedQuality = new ArrayList<>();
+    for (double q : quality) 
+        normalizedQuality.add(q / sum);
+    return normalizedQuality;
+}
+
+List<Double> qualityBySeventhType(List<String> experts, List<Answer> answers) {
+     //reading
+    double[][] sumMatrix = new double[experts.size()][experts.size()];
+    
+    for(int i = 0; i < questionSystem.getSize(); i++) {
+        Question question = questionSystem.getQuestion(i);
+        if (question.getType() != 7)
+            continue;
+        List<Answer> relevantAnswers = new ArrayList<>();
+        for (Answer answer : answers)
+            if (answer.qid == question.getQuestionId())
+                relevantAnswers.add(answer);
+        
+        List<List<Double> > questionMatrix = question.getWeight(experts, relevantAnswers);
+        for (int j = 0; j < questionMatrix.size(); j++) {
+            for (int k = 0; k < questionMatrix.get(j).size(); k++) {
+                sumMatrix[j+1][k+1] += questionMatrix.get(j).get(k);
+            }
+        }                
+    }
+    //normalize matrix
+    double sum = 0;
+    for(int i = 0; i < experts.size(); i++) 
+        for (int j = 0; j < experts.size(); j++)
+            sum += sumMatrix[i][j];
+    for(int i = 0; i < experts.size(); i++) 
+        for (int j = 0; j < experts.size(); j++)
+            sumMatrix[i][j] = sumMatrix[i][j] / sum;
+    
+    //combine to experts
+    List<Double> quality = new ArrayList<>();
+    for(int i = 0; i < experts.size(); i++) {
+        double singleQuality = 0;
+        for (int j = 0; j < experts.size(); j++)
+            singleQuality += sumMatrix[i][j] + sumMatrix[j][i];
+        quality.add(singleQuality);
+    }
+    
+    //normalize experts
+    sum = 0;
+    for (double q : quality) 
+        sum += q;
+    List<Double> normalizedQuality = new ArrayList<>();
+    for (double q : quality) 
+        normalizedQuality.add(q / sum);
+    return normalizedQuality;
+}
+
+    private final DBConnection db;
+    private QuestionSystem questionSystem;
+    private Expert currentUser;
 }

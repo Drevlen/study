@@ -6,6 +6,7 @@
 
 package ES.ExpertSystem;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -23,9 +24,52 @@ public class QuestionType4 extends Question {
         this(question);
         super.qid = id; 
     }
-    @Override
-    public double getWeight(Answer answer) {
-        return Double.parseDouble(answer.value);
+@Override
+    public List<List<Double> > getWeight(List<String> experts, List<Answer> answers){
+        //parse answers to weights
+        double[] correctAnswers = new double[experts.size()];
+        for (int i = 0; i < experts.size(); i++) {
+            for (Answer answer : answers) {
+                if (answer.expertName.equals(experts.get(i))) {
+                        correctAnswers[i] = Integer.parseInt(answer.value);
+                }
+            }
+        }
+        double min = Double.MAX_VALUE;
+        double max = Double.MIN_VALUE;
+        //find min find max
+        for (int i = 0; i < experts.size(); i++) {
+            if (min > correctAnswers[i])
+                min = correctAnswers[i];
+            if (max < correctAnswers[i])
+                max = correctAnswers[i];
+        }
+        max = max - min;
+        //diff and find min
+        min = Double.MAX_VALUE;
+        List<List<Double> > quality = new ArrayList<>();
+        for (int i = 0; i < experts.size() - 1; i++) {
+            quality.add(new ArrayList<Double>());
+            for (int j = i + 1; j < experts.size(); j++)
+            {
+                double diff = Math.abs(correctAnswers[i] 
+                        - correctAnswers[j]) / max;
+                quality.get(i).add(diff);
+                if (diff != 0 && diff < min)
+                    min = diff;
+            }
+        }
+        //revert
+        List<List<Double> > revertedQuality = new ArrayList<>();
+        for (int i = 0; i < quality.size(); i++) {
+            revertedQuality.add(new ArrayList<Double>());
+            for (int j = 0; j < quality.get(i).size(); j++) 
+                if (quality.get(i).get(j) != 0)
+                    revertedQuality.get(i).add(1 / quality.get(i).get(j));
+                else
+                    revertedQuality.get(i).add(2 / min);
+        }
+        return revertedQuality;
     }
     @Override
     public List<Double> getWeightAnswers(){

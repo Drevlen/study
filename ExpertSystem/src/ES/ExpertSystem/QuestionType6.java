@@ -30,14 +30,139 @@ public class QuestionType6 extends Question {
         }
             
     }
+    
     QuestionType6(String question, List<String> answers, List<Double> weights, int id) {
         this(question, answers, weights);
         super.qid = id;
     }
+ 
+    public Double parseFuzzyWord(String answer){
+        String delims = "_";
+        String[] parsedAnswers = answer.split(delims);
+        
+        Double[] fuzzyWordAnswer = new Double[4];
+        
+        for(int i = 0; i < possibleAnswers.size(); i++) {
+            if (possibleAnswers.get(i).equals(parsedAnswers[1])) {
+                fuzzyWordAnswer[0] = intervals.get(2 * i) - weight.get(2 * i);
+                fuzzyWordAnswer[1] = intervals.get(2 * i);
+                fuzzyWordAnswer[2] = intervals.get(2 * i + 1);
+                fuzzyWordAnswer[3] = intervals.get(2 * i + 1) + weight.get(2 * i + 1);
+                break;
+            }
+        }
+        
+        if (parsedAnswers[0].equals("Більш")) {
+            fuzzyWordAnswer[0] += fuzzyWordAnswer[1] - fuzzyWordAnswer[0];
+            fuzzyWordAnswer[3] -= fuzzyWordAnswer[3] - fuzzyWordAnswer[2];
+        } else if (parsedAnswers[0].equals("Менш")) {
+            fuzzyWordAnswer[0] -= fuzzyWordAnswer[1] - fuzzyWordAnswer[0];
+            fuzzyWordAnswer[3] += fuzzyWordAnswer[3] - fuzzyWordAnswer[2];
+        }
+        
+        if (parsedAnswers.length > 3)
+        {
+            int wordIndex = parsedAnswers.length == 5 ? 4 : 3;
+            String secondModifier = parsedAnswers.length == 5 ? parsedAnswers[3] : "";
+            
+            Double[] secondFuzzyWordAnswer = new Double[4];
+            for(int i = 0; i < possibleAnswers.size(); i++) {
+                if (possibleAnswers.get(i).equals(parsedAnswers[wordIndex])) {
+                    secondFuzzyWordAnswer[0] = intervals.get(2 * i) - weight.get(2 * i);
+                    secondFuzzyWordAnswer[1] = intervals.get(2 * i);
+                    secondFuzzyWordAnswer[2] = intervals.get(2 * i + 1);
+                    secondFuzzyWordAnswer[3] = intervals.get(2 * i + 1) + weight.get(2 * i + 1);
+                    break;
+                }
+            }
+            
+            if (secondModifier.equals("Більш")) {
+                secondFuzzyWordAnswer[0] += secondFuzzyWordAnswer[1] 
+                        - secondFuzzyWordAnswer[0];
+                secondFuzzyWordAnswer[3] -= secondFuzzyWordAnswer[3] 
+                        - secondFuzzyWordAnswer[2];
+            } else if (secondModifier.equals("Менш")) {
+                secondFuzzyWordAnswer[0] -= secondFuzzyWordAnswer[1] 
+                        - secondFuzzyWordAnswer[0];
+                secondFuzzyWordAnswer[3] += secondFuzzyWordAnswer[3] 
+                        - secondFuzzyWordAnswer[2];
+            }
+
+            if (Math.max(fuzzyWordAnswer[1], secondFuzzyWordAnswer[1]) 
+                    <= Math.min(fuzzyWordAnswer[2], secondFuzzyWordAnswer[2])) {
+                
+                if (parsedAnswers[2].equals("І")) {
+                    fuzzyWordAnswer[0] = Math.min(fuzzyWordAnswer[0], 
+                            secondFuzzyWordAnswer[0]);
+                    fuzzyWordAnswer[3] = Math.max(fuzzyWordAnswer[3], 
+                            secondFuzzyWordAnswer[3]);
+                    fuzzyWordAnswer[1] = Math.max(fuzzyWordAnswer[1], 
+                            secondFuzzyWordAnswer[1]);
+                    fuzzyWordAnswer[2] = Math.min(fuzzyWordAnswer[2], 
+                            secondFuzzyWordAnswer[2]);
+                } else if (parsedAnswers[2].equals("Або")) {
+                    fuzzyWordAnswer[0] = Math.min(fuzzyWordAnswer[0], 
+                            secondFuzzyWordAnswer[0]);
+                    fuzzyWordAnswer[3] = Math.max(fuzzyWordAnswer[3], 
+                            secondFuzzyWordAnswer[3]);
+                    fuzzyWordAnswer[1] = Math.min(fuzzyWordAnswer[1], 
+                            secondFuzzyWordAnswer[1]);
+                    fuzzyWordAnswer[2] = Math.max(fuzzyWordAnswer[2], 
+                            secondFuzzyWordAnswer[2]);
+                    
+                }
+            }  
+        }
+        
+        return (fuzzyWordAnswer[1] + fuzzyWordAnswer[2]) / 2
+                + ((fuzzyWordAnswer[3] - fuzzyWordAnswer[2]) 
+                    - (fuzzyWordAnswer[1] - fuzzyWordAnswer[0])
+                ) / 4;
+    }
+    
     @Override
-    public double getWeight(Answer answer) {
-        //(ml+mh)*h/2+(wh+wl)*h/4
-        return 0;
+    public List<List<Double> > getWeight(List<String> experts, List<Answer> answers){
+        //parse answers to weights
+        double[] correctAnswers = new double[experts.size()];
+        for (int i = 0; i < experts.size(); i++) 
+            for (Answer answer : answers) 
+                if (answer.expertName.equals(experts.get(i))) {
+                        correctAnswers[i] = parseFuzzyWord(answer.value);
+                    }
+        double min = Double.MAX_VALUE;
+        double max = Double.MIN_VALUE;
+        //find min find max
+        for (int i = 0; i < experts.size(); i++) {
+            if (min > correctAnswers[i])
+                min = correctAnswers[i];
+            if (max < correctAnswers[i])
+                max = correctAnswers[i];
+        }
+        max = max - min;
+        //diff and find min
+        min = Double.MAX_VALUE;
+        List<List<Double> > quality = new ArrayList<>();
+        for (int i = 0; i < experts.size() - 1; i++) {
+            quality.add(new ArrayList<Double>());
+            for (int j = i + 1; j < experts.size(); j++) {
+                double diff = Math.abs(correctAnswers[i] 
+                        - correctAnswers[j]) / max;
+                quality.get(i).add(diff);
+                if (diff != 0 && diff < min)
+                    min = diff;
+            }
+        }
+        //revert
+        List<List<Double> > revertedQuality = new ArrayList<>();
+        for (int i = 0; i < quality.size(); i++) {
+            revertedQuality.add(new ArrayList<Double>());
+            for (int j = 0; j < quality.get(i).size(); j++) 
+                if (quality.get(i).get(j) != 0)
+                    revertedQuality.get(i).add(1 / quality.get(i).get(j));
+                else
+                    revertedQuality.get(i).add(2 / min);
+        }
+        return revertedQuality;
     }
     @Override
     public List<Double> getWeightAnswers(){

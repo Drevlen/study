@@ -8,6 +8,7 @@ package ES.ExpertSystem;
 import java.sql.*;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Properties;
 /**
  *
  * @author drevlen
@@ -21,9 +22,10 @@ public class DBConnection {
                     + name + "' AND password='" + password + "'";
             ResultSet results = statement.executeQuery(select);
             while (results.next()) {
-                return results.getString("name");
+                String Name = results.getString("name");
+                connection.close();
+                return Name;
             }
-            connection.close();
         }
         return null;
     }
@@ -42,12 +44,12 @@ public class DBConnection {
         return expertNames;
     }
         
-    public List<String> getAllSystems() //TODO for systems
+    public List<String> getAllSystems()
     throws SQLException {
         List<String> expertNames = new ArrayList<>();
         try (Connection connection = connect()) {
             Statement statement = connection.createStatement();
-            String select = "SELECT name FROM `Experts`";
+            String select = "SELECT name FROM `QuestionSystems`";
             ResultSet results = statement.executeQuery(select);
             while (results.next()) {
                 expertNames.add(results.getString("name"));
@@ -56,18 +58,54 @@ public class DBConnection {
         }
         return expertNames;
     }
+
+    public List<String> getAllSystems(String owner)
+    throws SQLException {
+        List<String> expertNames = new ArrayList<>();
+        try (Connection connection = connect()) {
+            Statement statement = connection.createStatement();
+            String select = "SELECT name FROM `QuestionSystems`"
+                                        + "WHERE creatorName='" + owner + "'";
+            ResultSet results = statement.executeQuery(select);
+            while (results.next()) {
+                expertNames.add(results.getString("name"));
+            }
+            connection.close();
+        }
+        return expertNames;
+    }
+    
+    public List<Answer> getAnswers() 
+    throws SQLException {
+        List<Answer> expertNames = new ArrayList<>();
+        try (Connection connection = connect()) {
+            Statement statement = connection.createStatement();
+            String select = "SELECT * FROM `Answers`";
+            ResultSet results = statement.executeQuery(select);
+            while (results.next()) {
+                expertNames.add(new Answer(results.getInt("qid"),
+                results.getString("expertName"), results.getString("value")));
+            }
+            connection.close();
+        }
+        return expertNames;
+        
+    }
+    
     public boolean addExpert(String name, String password)
     throws SQLException {
         try (Connection connection = connect()) {
             Statement statement = connection.createStatement();
             String insert = "INSERT INTO `Experts`(`name`, `password`) "
                     + "VALUES ('" + name + "', '" + password + "')";
-            if (statement.executeUpdate(insert) > 0)
+            if (statement.executeUpdate(insert) > 0) {
+                connection.close();
                 return true;
-            connection.close();
+            }
         }
         return false;
     }
+
     public boolean addSystem(QuestionSystem system, String owner)
     throws SQLException {
         try (Connection connection = connect()) {
@@ -77,6 +115,8 @@ public class DBConnection {
             Statement statement = connection.createStatement();
             for (int i = 0; i < system.getSize(); i++) {
                 question = system.getQuestion(i);
+                if (question == null)
+                    return false;
                 insert = "INSERT INTO `Questions`(`question`, `type`, `system`) "
                         + "VALUES ('" + question.getQuestion() + "', '" 
                         + Integer.toString(question.getType()) + "','" 
@@ -132,9 +172,181 @@ public class DBConnection {
         }
     }
     
+    public boolean addAnswer(String expertName, 
+            int questionId, String answer) throws SQLException {
+        try (Connection connection = connect()) {
+            Statement statement = connection.createStatement();
+            String insert = "INSERT INTO `Answers`(`qid`, `expertName`, `value`) "
+                    + "VALUES ('" + questionId + "', '" + expertName
+                    + "', '" + answer + "')";
+            if (statement.executeUpdate(insert) > 0) {
+                connection.close();
+                return true;
+            }
+        }
+        return false;
+    }
+
+    
+    public List<Integer> getOrder(String name) 
+    throws SQLException {
+        List<Integer> order = new ArrayList<>();
+        try (Connection connection = connect()) {
+            Statement statement = connection.createStatement();
+            String select = "SELECT questionOrder FROM `QuestionSystems` "
+                    + "WHERE name='" + name + "'";
+            ResultSet results = statement.executeQuery(select);
+            String notParsedOrder = "";
+            while (results.next()) {
+                notParsedOrder = results.getString("questionOrder");
+            }
+            String delims = "[ ]";
+            String[] tokens = notParsedOrder.split(delims);
+            for (String token : tokens) {
+                order.add(Integer.parseInt(token));
+            }
+            connection.close();
+        }
+        return order;
+    }
+    
+    public Question getQuestion(String systemName, int qid)
+    throws SQLException {
+        Question question;
+        try (Connection connection = connect()) {
+            Statement statement = connection.createStatement();
+            String select = "SELECT * FROM `Questions` "
+                    + "WHERE qid='" + Integer.toString(qid) + "' AND "
+                    + "system='" + systemName + "'";
+            ResultSet results = statement.executeQuery(select);
+            int type = 0;
+            String questionString = null;
+            while (results.next()) {
+                type = results.getInt("type");
+                questionString = results.getString("question");
+            }
+            connection.close();
+            if (questionString == null)
+                return null;
+            switch (type) {
+                case 1:
+                    question = new QuestionType1(questionString, qid);
+                    break;
+                case 2:
+                    question = setQuestion2(questionString, qid);
+                    break;
+                case 3:
+                    question = setQuestion3(questionString, qid);
+                    break;
+                case 4:
+                    question = new QuestionType4(questionString, qid);
+                    break;
+                case 5:
+                    question = new QuestionType5(questionString, qid);
+                    break;
+                case 6:
+                    question = setQuestion6(questionString, qid);
+                    break;
+                case 7:
+                    question = setQuestion7(questionString, qid);
+                    break;
+                default:
+                    question = null;
+            }
+        }
+        return question;
+    }
+
+    private Question setQuestion2(String questionString, int qid)
+    throws SQLException {
+        Question question;
+        try (Connection connection = connect()) {
+            Statement statement = connection.createStatement();
+            String select = "SELECT * FROM `Questions2` "
+                    + "WHERE qid='" + Integer.toString(qid) + "'";
+            ResultSet results = statement.executeQuery(select);
+            List<String> answers = new ArrayList<>();
+            List<Double> weights = new ArrayList<>();
+            while (results.next()) {
+                answers.add(results.getString("answer"));
+                weights.add(results.getDouble("weight"));
+            }
+            connection.close();
+            question = new QuestionType2(questionString, answers, weights, qid);
+        }
+        return question;
+    }
+    
+    private Question setQuestion3(String questionString, int qid)
+    throws SQLException {
+        Question question;
+        try (Connection connection = connect()) {
+            Statement statement = connection.createStatement();
+            String select = "SELECT * FROM `Questions3` "
+                    + "WHERE qid='" + Integer.toString(qid) + "'";
+            ResultSet results = statement.executeQuery(select);
+            List<String> answers = new ArrayList<>();
+            List<Double> weights = new ArrayList<>();
+            while (results.next()) {
+                answers.add(results.getString("answer"));
+                weights.add(results.getDouble("weight"));
+            }
+            connection.close();
+            question = new QuestionType3(questionString, answers, weights, qid);
+        }
+        return question;
+    }
+    
+    private Question setQuestion6(String questionString, int qid)
+    throws SQLException {
+        Question question;
+        try (Connection connection = connect()) {
+            Statement statement = connection.createStatement();
+            String select = "SELECT * FROM `Questions6` "
+                    + "WHERE qid='" + Integer.toString(qid) + "'";
+            ResultSet results = statement.executeQuery(select);
+            List<String> answers = new ArrayList<>();
+            List<Double> weights = new ArrayList<>();
+            while (results.next()) {
+                answers.add(results.getString("answer"));
+                weights.add(results.getDouble("intervalFrom"));
+                weights.add(results.getDouble("intervalTo"));
+                weights.add(results.getDouble("weightFrom"));
+                weights.add(results.getDouble("weightTo"));
+            }
+            connection.close();
+            question = new QuestionType6(questionString, answers, weights, qid);
+        }
+        return question;
+    }    
+    
+    private Question setQuestion7(String questionString, int qid)
+    throws SQLException {
+        Question question;
+        try (Connection connection = connect()) {
+            Statement statement = connection.createStatement();
+            String select = "SELECT * FROM `Questions7` "
+                    + "WHERE qid='" + Integer.toString(qid) + "'";
+            ResultSet results = statement.executeQuery(select);
+            List<String> answers = new ArrayList<>();
+            List<Double> weights = new ArrayList<>();
+            while (results.next()) {
+                answers.add(results.getString("answer"));
+                weights.add(results.getDouble("weight"));
+            }
+            connection.close();
+            question = new QuestionType7(questionString, answers, weights, qid);
+        }
+        return question;
+    }
+        
     private Connection connect() throws SQLException {
+        Properties properties=new Properties();
+        properties.setProperty("user","SomeExpert");
+        properties.setProperty("password","Bdq4x5tr8Tsz7A9B");
+        properties.setProperty("useUnicode","true");
+        properties.setProperty("characterEncoding","UTF-8");
         return DriverManager.getConnection(
-                "jdbc:mysql://localhost:3306/QuestionSystem", 
-                "SomeExpert", "Bdq4x5tr8Tsz7A9B");
+                "jdbc:mysql://localhost:3306/QuestionSystem", properties);
     }
 }

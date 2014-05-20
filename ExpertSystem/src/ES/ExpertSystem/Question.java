@@ -32,7 +32,7 @@ public abstract class Question {
     public List<String> getAnswers() {
         return possibleAnswers;
     }
-    public abstract double getWeight(Answer answer);
+    public abstract List<List<Double> > getWeight(List<String> experts, List<Answer> answers);
 
     public abstract List<Double> getWeightAnswers();
     

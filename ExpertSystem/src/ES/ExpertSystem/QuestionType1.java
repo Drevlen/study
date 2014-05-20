@@ -7,6 +7,7 @@
 package ES.ExpertSystem;
 
 import java.util.List;
+import java.util.ArrayList;
 
 /**
  * @brief yes no questions
@@ -29,15 +30,27 @@ public class QuestionType1 extends Question {
     }
     
     @Override
-    public double getWeight(Answer answer) {
-        assert answer.qid == qid;
-        if ("Так".equals(answer.value)) {
-            return 1;
+    public List<List<Double> > getWeight(List<String> experts, List<Answer> answers){
+        int[] correctAnswers = new int[experts.size()];
+        for (int i = 0; i < experts.size(); i++) {
+            for (Answer answer : answers) {
+                if (answer.expertName.equals(experts.get(i))) {
+                    if (answer.value.equals("Так"))
+                        correctAnswers[i] = 1;
+                    else
+                        correctAnswers[i] = 0;
+                }
+            }
         }
-        if ("Ні".equals(answer.value)) {
-            return 0;
+        List<List<Double> > quality = new ArrayList<>();
+        for (int i = 0; i < experts.size() - 1; i++) {
+            quality.add(new ArrayList<Double>());
+            for (int j = i + 1; j < experts.size(); j++) 
+                if (correctAnswers[i] == correctAnswers[j])
+                    quality.get(i).add(1.0);
+                else
+                    quality.get(i).add(0.0);
         }
-        assert false;
-        return -1;
+        return quality;
     }
 }

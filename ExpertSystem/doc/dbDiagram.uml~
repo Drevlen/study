@@ -31,8 +31,35 @@ table(question) {
    varchar[30] SystemName
    int type 
    Text question
-   Text answers
-   
 }
+
+table(question2) {
+   int primary_key(qid)
+   String answers
+   double weight
+}
+table(question3) {
+   int primary_key(qid)
+   String answers
+   double weight
+}
+table(question7) {
+   int primary_key(qid)
+   String answers
+   double weight
+}
+table(question6) {
+   int primary_key(qid)
+   String answers
+   double intervalFrom
+   double intervalTo
+   double weightFrom
+   double weightTo
+}
+
+question <-- question2
+question <-- question3
+question <-- question7
+question <-- question6
 
 @enduml
