@@ -13,17 +13,34 @@ import java.util.List;
  * @author drevlen
  */
 public class QuestionType3 extends Question {
-    QuestionType3(String question, List<String> answers, List<Double> weights) {
+    QuestionType3(String question, List<String> answers, List<Double> answerWeights,
+            String correctAnswer) {
         super.question = question;
         super.qid = 0;
         super.typeNum = 3;
-        assert answers.size() == weights.size();
+        assert answers.size() == answerWeights.size();
         super.possibleAnswers = answers;
-        weight = weights;
+        weights = answerWeights;
+        super.correctAnswer = correctAnswer;
     }
-    QuestionType3(String question, List<String> answers, List<Double> weights, int id) {
-        this(question, answers, weights);
+    QuestionType3(String question, List<String> answers, List<Double> weights, 
+            String correctAnswer, int id) {
+        this(question, answers, weights, correctAnswer);
         super.qid = id;
+    }
+    @Override
+    public boolean isCorrect(String answer){
+        String delims = "_";
+        String[] parsedAnswers = answer.split(delims);
+        String[] parsedCorrectAnswers = correctAnswer.split(delims);
+        int numCorrect = 0;
+        for (String parsedAnswer : parsedAnswers) 
+            for (String parsedCorrectAnswer : parsedCorrectAnswers)
+                if (parsedCorrectAnswer.equals(parsedAnswer)) {
+                    numCorrect++;
+                }
+        int numWrong = Math.max(parsedAnswers.length, parsedCorrectAnswers.length) - numCorrect;
+        return numWrong == 0;
     }
     @Override
     public List<List<Double> > getWeight(List<String> experts, List<Answer> answers){
@@ -38,7 +55,7 @@ public class QuestionType3 extends Question {
                         correctAnswers[i][j] = -1;
                         for (String parsedAnswer : parsedAnswers)
                             if (parsedAnswer.equals(possibleAnswers.get(j)))
-                                correctAnswers[i][j] = weight.get(j);
+                                correctAnswers[i][j] = weights.get(j);
                     }
                         
                 }
@@ -75,7 +92,27 @@ public class QuestionType3 extends Question {
     }
     @Override
     public List<Double> getWeightAnswers(){
-        return weight;
+        return weights;
     }
-    final private List<Double> weight;
+    @Override
+    public void changeWeight(String answer, double score){
+        String delims = "_";
+        String[] parsedAnswers = answer.split(delims);
+        for (String parsedAnswer : parsedAnswers){
+            double min = 1;
+            double max = 0;
+            double choice = 0;
+            for (int i = 0; i < possibleAnswers.size(); i++){
+                if (possibleAnswers.get(i).equals(parsedAnswer))
+                    choice = weights.get(i);
+                if (weights.get(i) >= max)
+                    max = weights.get(i);
+                if (weights.get(i) <= min)
+                    min = weights.get(i);
+            }
+            super.weight = super.weight * (1 + score * (max - choice) 
+                    - (1 - score) * (choice - min));
+        }
+    }
+    final private List<Double> weights;
 }

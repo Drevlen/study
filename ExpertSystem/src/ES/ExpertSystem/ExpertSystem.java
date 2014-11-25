@@ -8,7 +8,6 @@ package ES.ExpertSystem;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -83,8 +82,9 @@ public class ExpertSystem {
         return "Додавання не здійснене";
     }
 
-    public String addQuestion(String question, int type, 
-            List<String> answers, List<String> weights) {
+    public String addQuestion(String question, int type, List<String> answers, 
+            List<String> weights, List<String> stringCorrectAnswers, 
+            String questionWeight) {
         if (question.isEmpty())
             return "Помилка. Питання не заповнене.";
         if (type > 0 && type != 3 && type != 4) {
@@ -93,41 +93,59 @@ public class ExpertSystem {
             if (weights.isEmpty())
                 return "Помилка. Не вказано ваги варіантів відповіді.";
         }
+        if (stringCorrectAnswers.isEmpty())
+            return "Помилка не вказано правильної відповіді.";
             
         List<Double> doubleWeights = new ArrayList();
         for (String weight : weights) {
             doubleWeights.add(Double.parseDouble(weight));
         }
         Question anyQuestion;
+        String correctAnswer = "";
         switch(type){
             case 0:
-                anyQuestion = new QuestionType1(question, questionSystem.getSize()); break;
+                anyQuestion = new QuestionType1(question, stringCorrectAnswers.get(0), 
+                        questionSystem.getSize()); break;
             case 1:
-                anyQuestion = new QuestionType2(question, answers, 
-                        doubleWeights, questionSystem.getSize()); break;
+                anyQuestion = new QuestionType2(question, answers, doubleWeights, 
+                        stringCorrectAnswers.get(0), questionSystem.getSize()); break;
             case 2:
-                anyQuestion = new QuestionType3(question, answers, 
-                        doubleWeights, questionSystem.getSize()); break;
+                for (String answer : stringCorrectAnswers)
+                    correctAnswer += answer + "_";
+                anyQuestion = new QuestionType3(question, answers, doubleWeights, 
+                        correctAnswer, questionSystem.getSize()); break;
             case 3:
-                anyQuestion = new QuestionType4(question, questionSystem.getSize()); break;
+                for (String answer : stringCorrectAnswers)
+                    correctAnswer += answer + "_";
+                anyQuestion = new QuestionType4(question, correctAnswer,
+                        questionSystem.getSize()); break;
             case 4:
-                anyQuestion = new QuestionType5(question, questionSystem.getSize()); break;
+                for (String answer : stringCorrectAnswers)
+                    correctAnswer += answer + "_";
+                anyQuestion = new QuestionType5(question, correctAnswer,
+                        questionSystem.getSize()); break;
             case 5:
-                anyQuestion = new QuestionType6(question, answers, 
-                        doubleWeights, questionSystem.getSize()); break;
+                for (String answer : stringCorrectAnswers)
+                    correctAnswer += answer + "_";
+                anyQuestion = new QuestionType6(question, answers, doubleWeights, 
+                        correctAnswer, questionSystem.getSize()); break;
             case 6:
-                anyQuestion = new QuestionType7(question, answers, 
-                        doubleWeights, questionSystem.getSize()); break;
+                anyQuestion = new QuestionType7(question, answers, doubleWeights, 
+                        stringCorrectAnswers.get(0), questionSystem.getSize()); break;
             default: return "Невідомий тип";
         }
+        double weight = Double.parseDouble(questionWeight);
+        if (weight < 0 || weight > 1)
+            return "Вага питання не в межах одиниці. " + Double.toString(weight);
+        anyQuestion.setQuestionWeight(weight);
         questionSystem.addQuestion(anyQuestion);
         return "Додано питання " + Integer.toString(questionSystem.getSize());
     }
    
-    public String addAnswer(String answer, int questionID) {
+    public String addAnswer(String answer) {
         if (currentUser == null)
             return "Експерт невідомий. Увійдіть!";
-        Question question = questionSystem.getQuestion(questionID);
+        Question question = questionSystem.getQuestion();
         if (question == null)
             return "Помилка питання не відоме.";
         try {
@@ -137,6 +155,18 @@ public class ExpertSystem {
             return "Помилка з’єднання з базою " 
                     + ex.getSQLState() + " " + ex.getMessage();
         }
+        
+        if (question.isCorrect(answer)) {
+            questionSystem.addAnswer(new Answer(question.getQuestionId(), 
+                    currentUser.getName(), answer), true);
+            currentUser.addScore(question.getQuestionWeight(), true);
+        } else {
+            questionSystem.addAnswer(new Answer(question.getQuestionId(), 
+                    currentUser.getName(), answer), false);
+            currentUser.addScore(question.getQuestionWeight(), false);
+        }
+        if (questionSystem.isFinished(currentUser))
+            return "Опитування пройдено.";
         
         return "Відповідь додано.";
     }
@@ -285,7 +315,7 @@ public class ExpertSystem {
         }
     }
     
-List<Double> qualityByType(List<String> experts, List<Answer> answers, int type) {
+    List<Double> qualityByType(List<String> experts, List<Answer> answers, int type) {
     //reading
     double[][] sumMatrix = new double[experts.size()][experts.size()];
     for(int i = 0; i < questionSystem.getSize(); i++) {
@@ -336,7 +366,7 @@ List<Double> qualityByType(List<String> experts, List<Answer> answers, int type)
     return normalizedQuality;
 }
 
-List<Double> qualityBySeventhType(List<String> experts, List<Answer> answers) {
+    List<Double> qualityBySeventhType(List<String> experts, List<Answer> answers) {
      //reading
     double[][] sumMatrix = new double[experts.size()][experts.size()];
     
@@ -384,6 +414,20 @@ List<Double> qualityBySeventhType(List<String> experts, List<Answer> answers) {
     return normalizedQuality;
 }
 
+    public String changeScores(){
+        try {
+            List<Question> questions = questionSystem.changeWeights(currentUser);
+            for(Question question : questions){
+                db.setWeight(question);
+            }
+            return "Оновлено ваги";
+        } catch (SQLException ex) {
+            Logger.getLogger(ExpertSystem.class.getName()).log(Level.SEVERE, null, ex);
+            return "Помилка з’єднання з базою " 
+                    + ex.getSQLState() + " " + ex.getMessage();
+        }
+    }
+    
     private final DBConnection db;
     private QuestionSystem questionSystem;
     private Expert currentUser;

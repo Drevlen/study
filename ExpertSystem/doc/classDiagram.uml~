@@ -17,7 +17,7 @@ class ExpertSystem {
 
 class DBConnection {
    +int getNextQID();
-   +String password;
+   +String getPassword(String name);
    -bool connect();
 }
 

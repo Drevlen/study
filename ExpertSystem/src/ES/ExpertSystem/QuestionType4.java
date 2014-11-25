@@ -14,17 +14,26 @@ import java.util.List;
  * @author drevlen
  */
 public class QuestionType4 extends Question {
-    QuestionType4(String question){
+    QuestionType4(String question, String correctAnswer){
         super.question = question;
         super.qid = 0;
         super.typeNum = 4;     
+        super.correctAnswer = correctAnswer;
     }
     
-    QuestionType4(String question, int id){
-        this(question);
+    QuestionType4(String question, String correctAnswer, int id){
+        this(question, correctAnswer);
         super.qid = id; 
     }
-@Override
+    @Override
+    public boolean isCorrect(String answer){
+        String delims = "_";
+        String[] parsedAnswers = correctAnswer.split(delims);
+        double doubleAnswer = Double.parseDouble(answer);
+        return Double.parseDouble(parsedAnswers[1]) <=  doubleAnswer
+                && Double.parseDouble(parsedAnswers[2]) >= doubleAnswer;
+    }
+    @Override
     public List<List<Double> > getWeight(List<String> experts, List<Answer> answers){
         //parse answers to weights
         double[] correctAnswers = new double[experts.size()];
@@ -74,5 +83,18 @@ public class QuestionType4 extends Question {
     @Override
     public List<Double> getWeightAnswers(){
         return null;
+    }
+    @Override
+    public void changeWeight(String answer, double score){
+        String delims = "_";
+        String[] parsedAnswers = correctAnswer.split(delims);
+        double correct = Math.abs(Double.parseDouble(answer) 
+                - Double.parseDouble(parsedAnswers[0])) 
+                / Math.abs(Double.parseDouble(parsedAnswers[1]) 
+                        - Double.parseDouble(parsedAnswers[2]));
+        if (correct < 0.5)
+            super.weight = super.weight * score;
+        else
+            super.weight = super.weight + score * (1 - super.weight);
     }
 }

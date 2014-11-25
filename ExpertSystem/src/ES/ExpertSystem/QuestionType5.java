@@ -14,15 +14,35 @@ import java.util.List;
  * @author drevlen
  */
 public class QuestionType5 extends Question{
-    QuestionType5(String question) {
+    QuestionType5(String question, String correctAnswer) {
         super.question = question;
         super.qid = 0;
         super.typeNum = 5;
+        super.correctAnswer = correctAnswer;
     }
     
-    QuestionType5(String question, int id) {
-        this(question);
+    QuestionType5(String question, String correctAnswer, int id) {
+        this(question, correctAnswer);
         super.qid = id;
+    }
+    @Override
+    public boolean isCorrect(String answer){
+        String delims = "_";
+        String[] parsedCorrectAnswers = correctAnswer.split(delims);
+        String[] parsedAnswers = answer.split(delims);
+        double from = Double.parseDouble(parsedAnswers[0]);
+        double to = Double.parseDouble(parsedAnswers[1]);
+        double fromCorrect = Double.parseDouble(parsedCorrectAnswers[1]);
+        double toCorrect = Double.parseDouble(parsedCorrectAnswers[2]);
+        double[] united = new double[2];
+        double[] common = new double[2];
+        united[0] = Math.min(from, fromCorrect);
+        united[1] = Math.max(to, toCorrect);
+        common[0] = Math.max(from, fromCorrect);
+        common[1] = Math.min(to, toCorrect);
+        if (common[1] - common[0] < 0)
+            return false;
+        return Math.abs((united[1] - united[0]) / (common[1] - common[0]) - 1.) < 0.1;
     }
     @Override
     public List<List<Double> > getWeight(List<String> experts, List<Answer> answers){
@@ -65,5 +85,26 @@ public class QuestionType5 extends Question{
     @Override
     public List<Double> getWeightAnswers(){
         return null;
+    }
+    @Override
+    public void changeWeight(String answer, double score){
+        String delims = "_";
+        String[] parsedCorrectAnswers = correctAnswer.split(delims);
+        String[] parsedAnswers = answer.split(delims);
+        double from = Double.parseDouble(parsedAnswers[0]);
+        double to = Double.parseDouble(parsedAnswers[1]);
+        double fromCorrect = Double.parseDouble(parsedCorrectAnswers[1]);
+        double toCorrect = Double.parseDouble(parsedCorrectAnswers[2]);
+        double[] united = new double[2];
+        double[] common = new double[2];
+        united[0] = Math.min(from, fromCorrect);
+        united[1] = Math.max(to, toCorrect);
+        common[0] = Math.max(from, fromCorrect);
+        common[1] = Math.min(to, toCorrect);
+        
+        if (Math.abs((united[1] - united[0]) / (common[1] - common[0]) - 1) <= 0.1)
+            super.weight = super.weight * score;
+        else
+            super.weight = super.weight + score * (1 - super.weight);        
     }
 }

@@ -35,13 +35,7 @@ class Answer {
 }
 
 class QuestionSystem {
-   List<QuestionType1> questionsType1;
-   List<QuestionType2> questionsType2;
-   List<QuestionType3> questionsType3;
-   List<QuestionType4> questionsType4;
-   List<QuestionType5> questionsType5;
-   List<QuestionType6> questionsType6;
-   List<QuestionType7> questionsType7;
+   List<Question> questionsType;
    List<uint> qidOrder
 }
 

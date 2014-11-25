@@ -13,10 +13,26 @@ package ES.ExpertSystem;
 public class Expert {
     public Expert(String expertName) {
         name = expertName;
+        scoreCorrect = 0;
+        scoreWrong = 0;
     }
     public String getName() {
         return name;
     }
+    public void addScore(double questionWeight, boolean isCorrect) {
+        if (isCorrect)
+            scoreCorrect += questionWeight;
+        else 
+            scoreWrong += questionWeight;
+    }
+    public double getScore() {
+        if (scoreCorrect > 0)
+            return scoreCorrect / (scoreCorrect + scoreWrong);//5.1
+        else
+            return scoreCorrect;
+    }
+    
     private final String name;
-    QuestionSystem answers;
+    private double scoreCorrect;
+    private double scoreWrong;
 }

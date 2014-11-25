@@ -23,7 +23,7 @@ table(Answers) {
    int primary_key(id)
    int qid
    varchar[30] expertName   
-   varchar[30] value
+   varchar[100] value
 }
 
 table(question) {
@@ -61,5 +61,6 @@ question <-- question2
 question <-- question3
 question <-- question7
 question <-- question6
+Systems <-- question
 
 @enduml

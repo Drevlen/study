@@ -12,20 +12,28 @@ import java.util.List;
  * @author drevlen
  */
 public class QuestionType2 extends Question{
-    QuestionType2(String question, List<String> answers, List<Double> weights) {
+    QuestionType2(String question, List<String> answers, List<Double> AnswerWeights,
+            String stringCorrectAnswer) {
         super.question = question;
         super.qid = 0;
         super.typeNum = 2;
-        assert answers.size() == weights.size();
+        assert answers.size() == AnswerWeights.size();
         super.possibleAnswers = answers;
-        weight = weights;
+        weights = AnswerWeights;
+        super.correctAnswer = stringCorrectAnswer;
     }
     
-    QuestionType2(String question, List<String> answers, List<Double> weights, int id) {
-        this(question, answers, weights);
+    QuestionType2(String question, List<String> answers, List<Double> weights, 
+            String stringCorrectAnswer, int id) {
+        this(question, answers, weights, stringCorrectAnswer);
         super.qid = id;
     }
     
+    @Override
+    public boolean isCorrect(String answer){
+        return correctAnswer.equals(answer);
+    }
+
     @Override
     public List<List<Double> > getWeight(List<String> experts, List<Answer> answers){
         //parse answers to weights
@@ -66,16 +74,34 @@ public class QuestionType2 extends Question{
     
     @Override
     public List<Double> getWeightAnswers(){
-        return weight;
+        return weights;
     }
     
     private Double getWeight(Answer answer) {
         for (int i = 0; i < possibleAnswers.size(); i++) {
             if (possibleAnswers.get(i).equals(answer.value))
-                return weight.get(i);
+                return weights.get(i);
         }
         return null;
     }
     
-    final private List<Double> weight;
+    @Override
+    public void changeWeight(String answer, double score){
+        double min = 1;
+        double max = 0;
+        double choice = 0;
+        for (int i = 0; i < possibleAnswers.size(); i++){
+            if (possibleAnswers.get(i).equals(answer))
+                choice = weights.get(i);
+            if (weights.get(i) >= max)
+                max = weights.get(i);
+            if (weights.get(i) <= min)
+                min = weights.get(i);
+        }
+        
+        super.weight = super.weight * (1 + score * (max - choice) 
+                - (1 - score) * (choice - min));
+    }
+    
+    final private List<Double> weights;
 }

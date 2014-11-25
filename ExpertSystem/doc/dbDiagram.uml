@@ -23,7 +23,7 @@ table(Answers) {
    int primary_key(id)
    int qid
    varchar[30] expertName   
-   varchar[30] value
+   varchar[100] value
 }
 
 table(question) {
@@ -31,6 +31,8 @@ table(question) {
    varchar[30] SystemName
    int type 
    Text question
+   varchar[30] correct
+   double weight
 }
 
 table(question2) {

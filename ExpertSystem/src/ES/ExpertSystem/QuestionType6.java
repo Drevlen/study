@@ -14,25 +14,27 @@ import java.util.ArrayList;
  * @author drevlen
  */
 public class QuestionType6 extends Question {
-    QuestionType6(String question, List<String> answers, List<Double> weights) {
+    QuestionType6(String question, List<String> answers, List<Double> anwerWeights,
+            String correctAnswer) {
         super.question = question;
         super.qid = 0; // TODO useDBConnection
         super.typeNum = 6;
-        assert answers.size() == weights.size();
+        assert answers.size() == anwerWeights.size();
         super.possibleAnswers = answers;
         intervals = new ArrayList<>();
-        weight = new ArrayList<>();
+        weights = new ArrayList<>();
         for (int i = 0; i < answers.size(); i++) {
-            intervals.add(weights.get(4*i));
-            intervals.add(weights.get(4*i+1));
-            weight.add(weights.get(4*i+2));
-            weight.add(weights.get(4*i+3));
+            intervals.add(anwerWeights.get(4*i));
+            intervals.add(anwerWeights.get(4*i+1));
+            weights.add(anwerWeights.get(4*i+2));
+            weights.add(anwerWeights.get(4*i+3));
         }
-            
+        super.correctAnswer = correctAnswer;   
     }
     
-    QuestionType6(String question, List<String> answers, List<Double> weights, int id) {
-        this(question, answers, weights);
+    QuestionType6(String question, List<String> answers, List<Double> weights, 
+            String correctAnswer, int id) {
+        this(question, answers, weights, correctAnswer);
         super.qid = id;
     }
  
@@ -44,10 +46,10 @@ public class QuestionType6 extends Question {
         
         for(int i = 0; i < possibleAnswers.size(); i++) {
             if (possibleAnswers.get(i).equals(parsedAnswers[1])) {
-                fuzzyWordAnswer[0] = intervals.get(2 * i) - weight.get(2 * i);
+                fuzzyWordAnswer[0] = intervals.get(2 * i) - weights.get(2 * i);
                 fuzzyWordAnswer[1] = intervals.get(2 * i);
                 fuzzyWordAnswer[2] = intervals.get(2 * i + 1);
-                fuzzyWordAnswer[3] = intervals.get(2 * i + 1) + weight.get(2 * i + 1);
+                fuzzyWordAnswer[3] = intervals.get(2 * i + 1) + weights.get(2 * i + 1);
                 break;
             }
         }
@@ -68,10 +70,10 @@ public class QuestionType6 extends Question {
             Double[] secondFuzzyWordAnswer = new Double[4];
             for(int i = 0; i < possibleAnswers.size(); i++) {
                 if (possibleAnswers.get(i).equals(parsedAnswers[wordIndex])) {
-                    secondFuzzyWordAnswer[0] = intervals.get(2 * i) - weight.get(2 * i);
+                    secondFuzzyWordAnswer[0] = intervals.get(2 * i) - weights.get(2 * i);
                     secondFuzzyWordAnswer[1] = intervals.get(2 * i);
                     secondFuzzyWordAnswer[2] = intervals.get(2 * i + 1);
-                    secondFuzzyWordAnswer[3] = intervals.get(2 * i + 1) + weight.get(2 * i + 1);
+                    secondFuzzyWordAnswer[3] = intervals.get(2 * i + 1) + weights.get(2 * i + 1);
                     break;
                 }
             }
@@ -119,7 +121,14 @@ public class QuestionType6 extends Question {
                     - (fuzzyWordAnswer[1] - fuzzyWordAnswer[0])
                 ) / 4;
     }
-    
+    @Override
+    public boolean isCorrect(String answer){
+        String delims = "_";
+        String[] parsedAnswers = correctAnswer.split(delims);
+        double doubleAnswer = parseFuzzyWord(answer);
+        return Double.parseDouble(parsedAnswers[1]) <=  doubleAnswer
+                && Double.parseDouble(parsedAnswers[2]) >= doubleAnswer;
+    }
     @Override
     public List<List<Double> > getWeight(List<String> experts, List<Answer> answers){
         //parse answers to weights
@@ -169,10 +178,23 @@ public class QuestionType6 extends Question {
         List<Double> container = new ArrayList<>();
         for (int i = 0; i < intervals.size(); i++) {
             container.add(intervals.get(i));
-            container.add(weight.get(i));
+            container.add(weights.get(i));
         }
         return container;
     }
+    @Override
+    public void changeWeight(String answer, double score){
+        String delims = "_";
+        String[] parsedAnswers = correctAnswer.split(delims);
+        double correct = Math.abs(parseFuzzyWord(answer)
+                - Double.parseDouble(parsedAnswers[0])) 
+                / Math.abs(Double.parseDouble(parsedAnswers[1]) 
+                        - Double.parseDouble(parsedAnswers[2]));
+        if (correct < 0.5)
+            super.weight = super.weight * score;
+        else
+            super.weight = super.weight + score * (1 - super.weight);
+    }
     final private List<Double> intervals;
-    final private List<Double> weight;
+    final private List<Double> weights;
 }

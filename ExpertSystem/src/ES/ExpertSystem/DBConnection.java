@@ -14,6 +14,16 @@ import java.util.Properties;
  * @author drevlen
  */
 public class DBConnection {
+    private Connection connect() throws SQLException {
+        Properties properties=new Properties();
+        properties.setProperty("user","SomeExpert");
+        properties.setProperty("password","Bdq4x5tr8Tsz7A9B");
+        properties.setProperty("useUnicode","true");
+        properties.setProperty("characterEncoding","UTF-8");
+        return DriverManager.getConnection(
+                "jdbc:mysql://localhost:3306/QuestionSystem", properties);
+    }
+        
     public String getExpert(String name, String password)
     throws SQLException {
         try (Connection connection = connect()) {
@@ -117,10 +127,12 @@ public class DBConnection {
                 question = system.getQuestion(i);
                 if (question == null)
                     return false;
-                insert = "INSERT INTO `Questions`(`question`, `type`, `system`) "
+                insert = "INSERT INTO `Questions`(`question`, `type`, `system`, `correct`, `weight`) "
                         + "VALUES ('" + question.getQuestion() + "', '" 
                         + Integer.toString(question.getType()) + "','" 
-                        + system.getName() +"')";
+                        + system.getName()+ "','" + question.getCorrectAnswer() 
+                        + "','" + Double.toString(question.getQuestionWeight())
+                        + "')";
                 PreparedStatement preparedStatement = connection.prepareStatement(
                         insert, Statement.RETURN_GENERATED_KEYS);
                 preparedStatement.executeUpdate();  
@@ -221,43 +233,48 @@ public class DBConnection {
             ResultSet results = statement.executeQuery(select);
             int type = 0;
             String questionString = null;
+            String correctAnswer = null;
+            double weight = 0;
             while (results.next()) {
                 type = results.getInt("type");
                 questionString = results.getString("question");
+                correctAnswer = results.getString("correct");
+                weight = results.getDouble("weight");
             }
             connection.close();
             if (questionString == null)
                 return null;
             switch (type) {
                 case 1:
-                    question = new QuestionType1(questionString, qid);
+                    question = new QuestionType1(questionString, correctAnswer, qid);
                     break;
                 case 2:
-                    question = setQuestion2(questionString, qid);
+                    question = setQuestion2(questionString, correctAnswer, qid);
                     break;
                 case 3:
-                    question = setQuestion3(questionString, qid);
+                    question = setQuestion3(questionString, correctAnswer, qid);
                     break;
                 case 4:
-                    question = new QuestionType4(questionString, qid);
+                    question = new QuestionType4(questionString, correctAnswer, qid);
                     break;
                 case 5:
-                    question = new QuestionType5(questionString, qid);
+                    question = new QuestionType5(questionString, correctAnswer, qid);
                     break;
                 case 6:
-                    question = setQuestion6(questionString, qid);
+                    question = setQuestion6(questionString, correctAnswer, qid);
                     break;
                 case 7:
-                    question = setQuestion7(questionString, qid);
+                    question = setQuestion7(questionString, correctAnswer, qid);
                     break;
                 default:
-                    question = null;
+                    return null;
             }
+            question.setQuestionWeight(weight);
         }
         return question;
     }
 
-    private Question setQuestion2(String questionString, int qid)
+    private Question setQuestion2(String questionString, String correctAnswer, int qid)
     throws SQLException {
         Question question;
         try (Connection connection = connect()) {
@@ -272,12 +289,12 @@ public class DBConnection {
                 weights.add(results.getDouble("weight"));
             }
             connection.close();
-            question = new QuestionType2(questionString, answers, weights, qid);
+            question = new QuestionType2(questionString, answers, weights, correctAnswer, qid);
         }
         return question;
     }
     
-    private Question setQuestion3(String questionString, int qid)
+    private Question setQuestion3(String questionString, String correctAnswer, int qid)
     throws SQLException {
         Question question;
         try (Connection connection = connect()) {
@@ -292,12 +309,12 @@ public class DBConnection {
                 weights.add(results.getDouble("weight"));
             }
             connection.close();
-            question = new QuestionType3(questionString, answers, weights, qid);
+            question = new QuestionType3(questionString, answers, weights, correctAnswer, qid);
         }
         return question;
     }
     
-    private Question setQuestion6(String questionString, int qid)
+    private Question setQuestion6(String questionString, String correctAnswer, int qid)
     throws SQLException {
         Question question;
         try (Connection connection = connect()) {
@@ -315,12 +332,12 @@ public class DBConnection {
                 weights.add(results.getDouble("weightTo"));
             }
             connection.close();
-            question = new QuestionType6(questionString, answers, weights, qid);
+            question = new QuestionType6(questionString, answers, weights, correctAnswer, qid);
         }
         return question;
     }    
     
-    private Question setQuestion7(String questionString, int qid)
+    private Question setQuestion7(String questionString, String correctAnswer, int qid)
     throws SQLException {
         Question question;
         try (Connection connection = connect()) {
@@ -335,18 +352,23 @@ public class DBConnection {
                 weights.add(results.getDouble("weight"));
             }
             connection.close();
-            question = new QuestionType7(questionString, answers, weights, qid);
+            question = new QuestionType7(questionString, answers, weights, correctAnswer, qid);
         }
         return question;
     }
-        
-    private Connection connect() throws SQLException {
-        Properties properties=new Properties();
-        properties.setProperty("user","SomeExpert");
-        properties.setProperty("password","Bdq4x5tr8Tsz7A9B");
-        properties.setProperty("useUnicode","true");
-        properties.setProperty("characterEncoding","UTF-8");
-        return DriverManager.getConnection(
-                "jdbc:mysql://localhost:3306/QuestionSystem", properties);
+
+    public boolean setWeight(Question question) 
+            throws SQLException {
+        try (Connection connection = connect()) {
+            Statement statement = connection.createStatement();
+            String update = "UPDATE `Questions` SET `weight`= " 
+                    + question.getQuestionWeight()
+                    + "WHERE qid='" + Integer.toString(question.qid) + "'";
+            if (statement.executeUpdate(update) > 0) {
+                connection.close();
+                return true;
+            }
+        }
+        return false;
     }
 }

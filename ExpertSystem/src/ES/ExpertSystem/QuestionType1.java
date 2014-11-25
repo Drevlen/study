@@ -14,13 +14,14 @@ import java.util.ArrayList;
  * @author drevlen
  */
 public class QuestionType1 extends Question {
-    QuestionType1(String question){
+    QuestionType1(String question, String correctAnswer){
         super.question = question;
+        super.correctAnswer = correctAnswer;
         super.qid = 0;
         super.typeNum = 1;     
     }
-    QuestionType1(String question, int id){
-        this(question);
+    QuestionType1(String question, String correctAnswer, int id){
+        this(question, correctAnswer);
         super.qid = id;
     }
     
@@ -28,7 +29,10 @@ public class QuestionType1 extends Question {
     public List<Double> getWeightAnswers(){
         return null;
     }
-    
+    @Override
+    public boolean isCorrect(String answer){
+        return answer.equals("Так");
+    }
     @Override
     public List<List<Double> > getWeight(List<String> experts, List<Answer> answers){
         int[] correctAnswers = new int[experts.size()];
@@ -52,5 +56,13 @@ public class QuestionType1 extends Question {
                     quality.get(i).add(0.0);
         }
         return quality;
+    }
+    
+    @Override
+    public void changeWeight(String answer, double score){
+        if (isCorrect(answer))
+            super.weight = super.weight * score;
+        else
+            super.weight = super.weight + score * (1 - super.weight);
     }
 }
