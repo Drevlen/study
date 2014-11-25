@@ -1,0 +1,113 @@
+@startuml
+
+class ExpertSystemUI {
+
+}
+
+class ExpertSystem {
+   createQuestionSystem(String name)
+   addQuestion(Question)
+   getBestExpert()
+   addAnswers()
+
+   List<String> availableQuestionSystems
+   QuestionSystem questionSystem
+   Expert currentUser
+}
+
+class DBConnection {
+   +int getNextQID();
+   +String getPassword(String name);
+   -bool connect();
+}
+
+class Expert {
+   bool login(String name_, String password_)
+   void addAnswers(String questionSystemName, List<Answer> answers)
+   List<Answer> getAnswers()
+   String name
+   Map<String, List<Answer> > answers
+}
+
+class Answer {
+   uint qid;
+   double correctness?
+}
+
+class QuestionSystem {
+   List<QuestionType1> questionsType1;
+   List<QuestionType2> questionsType2;
+   List<QuestionType3> questionsType3;
+   List<QuestionType4> questionsType4;
+   List<QuestionType5> questionsType5;
+   List<QuestionType6> questionsType6;
+   List<QuestionType7> questionsType7;
+   List<uint> qidOrder
+}
+
+class Question {
+   uint qid;
+   enum type
+   String question
+   List<String> possibleAnswer;
+}
+
+class QuestionType1 {
+   Answer getWeight(String answer)
+}
+
+class QuestionType2 {
+   List<double> weight;
+   Answer getWeight(String answer)
+}
+
+class QuestionType3 {
+   List<double> weight;
+   Answer getWeight(String answer)
+}
+
+class QuestionType4 {
+   List<double> from;
+   List<double> to;
+   List<double> weight;
+   Answer getWeight(String answer)
+}
+
+class QuestionType5 {
+   List<double> from;
+   List<double> to;
+   List<double> weight;
+   Answer getWeight(String answer)
+
+}
+
+class QuestionType6 {
+   Answer getWeight(String answer)
+}
+
+class QuestionType7 {
+   List<double> weight;
+   Answer getWeight(String answer)
+}
+
+ExpertSystemUI <-- ExpertSystem
+ExpertSystem <-- Expert
+ExpertSystem <|-- QuestionSystem
+ExpertSystem *-- DBConnection
+QuestionSystem *-- Question
+Question <|-- QuestionType1
+Question <|-- QuestionType2
+Question <|-- QuestionType3
+Question <|-- QuestionType4
+Question <|-- QuestionType5
+Question <|-- QuestionType6
+Question <|-- QuestionType7
+
+/'QuestionType1 .down. QuestionType2
+#QuestionType2 .down. QuestionType3
+#QuestionType3 .down. QuestionType4
+#QuestionType4 .down. QuestionType5
+#QuestionType5 .down. QuestionType6
+#QuestionType6 .down. QuestionType7'/
+
+@enduml

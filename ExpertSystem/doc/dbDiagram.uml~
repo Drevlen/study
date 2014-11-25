@@ -1,0 +1,66 @@
+@startuml
+
+!define table(x) class x << (T,#FFAAAA) >>
+!define primary_key(x) <u><b>x</b></u>
+!define unique(x) <u>x</u>
+hide methods
+hide stereotypes
+
+table(Experts) {
+   int primary_key(id)
+   varchar[30] unique(name)
+   text password
+}
+
+table(Systems) {
+   int primary_key(id)
+   varchar[30] unique(name)
+   varchar[30] creatorName
+   Text questionOrder
+}
+
+table(Answers) {
+   int primary_key(id)
+   int qid
+   varchar[30] expertName   
+   varchar[100] value
+}
+
+table(question) {
+   int primary_key(qid)
+   varchar[30] SystemName
+   int type 
+   Text question
+}
+
+table(question2) {
+   int primary_key(qid)
+   String answers
+   double weight
+}
+table(question3) {
+   int primary_key(qid)
+   String answers
+   double weight
+}
+table(question7) {
+   int primary_key(qid)
+   String answers
+   double weight
+}
+table(question6) {
+   int primary_key(qid)
+   String answers
+   double intervalFrom
+   double intervalTo
+   double weightFrom
+   double weightTo
+}
+
+question <-- question2
+question <-- question3
+question <-- question7
+question <-- question6
+Systems <-- question
+
+@enduml
